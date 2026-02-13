@@ -1,6 +1,6 @@
 <?php
 
-namespace Wscore\SandBoxes\LeanValidator;
+namespace Wscore\LeanValidator;
 
 use Closure;
 use ReflectionException;
@@ -12,7 +12,7 @@ class Validator
     private MessageBag $errors;
     protected string $currentKey = '';
     private string $currentErrMsg = '';
-    private bool $currentErrFlag = false;
+    protected bool $currentErrFlag = false;
 
     public function __construct(array $data)
     {

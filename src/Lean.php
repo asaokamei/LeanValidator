@@ -1,40 +1,45 @@
 <?php
-namespace Wscore\SandBoxes\LeanValidator;
+namespace Wscore\LeanValidator;
 
 class Lean extends Validator
 {
     /**
-     * @method $this int(int $min = null, int $max = null, ?string $msg = null)
+     * @method $this int(?int $min = null, ?int $max = null, ?string $msg = null)
      * @method $this email(?string $msg = null)
-     * @method $this url(?string $msg = null)
+     * @method $this regex(string $pattern, ?string $msg = null)
+     * @method $this sameWith(mixed $compareTarget, ?string $msg = null)
+     * @method $this unique(\PDO $db, string $table, ?string $msg = null)
      */
     public function __call(string $name, array $args): static
     {
-        // 1. ガード節：既にエラーがある場合は即リターン（各メソッドにif文を書かなくて済む）
+        // 1. ガード節：既にエラーがあるキーなら何もしない（即終了）
         if ($this->currentErrFlag) {
             return $this;
         }
 
-        // 2. 内部メソッド（アンダースコア付き）の探索
-        $internalMethod = '_' . $name;
-        if (method_exists($this, $internalMethod)) {
-            return $this->$internalMethod(...$args);
+        // 2. 内部メソッドの探索 (_name)
+        $internal = '_' . $name;
+        if (method_exists($this, $internal)) {
+            return $this->$internal(...$args);
         }
 
-        // 3. 外部ルールクラスの探索 (Asao\Rules\JpPhone など)
-        $externalClass = "Asao\\Rules\\" . ucfirst($name);
-        if (class_exists($externalClass)) {
-            $rule = new $externalClass(...$args);
-            // ルール側で判定。setError呼び出しなどはRuleオブジェクトに任せるか、戻り値で判定
-            if (!$rule->passes($this->getCurrentValue())) {
-                $this->setError($args[count($args) - 1] ?? null); // 最後の引数をメッセージと仮定
+        // 3. 外部ルールクラスの探索 (__invoke)
+        $external = "Asao\\Rules\\" . ucfirst($name);
+        if (class_exists($external)) {
+            // 最後の引数が string かつ、メソッドの期待する引数より多ければメッセージとみなす
+            $msg = (count($args) > 0 && is_string(end($args))) ? array_pop($args) : null;
+
+            // インスタンス化して実行（DIが必要な場合は $args に入っている想定）
+            $rule = new $external(...$args);
+
+            if (!$rule($this->getCurrentValue())) {
+                $this->setError($msg);
             }
             return $this;
         }
 
-        throw new \BadMethodCallException("バリデーションルール [{$name}] は定義されていません。");
+        throw new \BadMethodCallException("Rule [{$name}] is not defined.");
     }
-
     /**
      * 実際のロジックはアンダースコア付きで定義
      * ifチェックが不要になり、ロジックが超Leanに！

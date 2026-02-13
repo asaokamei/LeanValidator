@@ -1,5 +1,5 @@
 <?php
-namespace Wscore\SandBoxes\LeanValidator;
+namespace Wscore\LeanValidator;
 
 
 class MessageBag
