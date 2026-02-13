@@ -8,7 +8,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Wscore\\Leanvalidator\\": "src/"
+            "Wscore\\LeanValidator\\": "src/"
         }
     },
     "authors": [
