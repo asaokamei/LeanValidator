@@ -1,0 +1,21 @@
+{
+    "name": "wscore/leanvalidator",
+    "description": "AI-friendly & simple validator",
+    "type": "library",
+    "require-dev": {
+        "phpunit/phpunit": "^13.0"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Wscore\\Leanvalidator\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "亀井亜佐夫",
+            "email": "asao.kamei@gmail.com"
+        }
+    ],
+    "require": {}
+}
