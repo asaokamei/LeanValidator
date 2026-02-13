@@ -14,7 +14,7 @@ class Validator
     private string $currentErrMsg = '';
     protected bool $currentErrFlag = false;
 
-    public function __construct(array $data)
+    public function __construct(array $data) 
     {
         $this->setData($data);
         $this->errors = new MessageBag();
@@ -63,11 +63,11 @@ class Validator
         $this->currentErrFlag = true;
         return $this;
     }
-    protected function isCurrentError(): bool
+    public function isCurrentError(): bool
     {
         return $this->currentErrFlag;
     }
-    protected function isCurrentOK(): bool
+    public function isCurrentOK(): bool
     {
         return !$this->currentErrFlag;
     }
@@ -195,12 +195,32 @@ class Validator
     }
 
     /**
-     * 配列の各要素を検証
-     * example:
-     * $this->arrayApply($this->int(...), 1, 99)
-     * $this->arrayApply('is_int') // function (mixed $value): bool
+     * 配列の各要素を検証します。
      *
-     * @param callable $validator First-class callable
+     * 様々な形式の callable を受け取ることができます：
+     *
+     * 1. Validator メソッドを文字列で指定:
+     *    $v->forKey('tags')->arrayApply('string');
+     *
+     * 2. Validator メソッドを First-class callable で指定 (PHP 8.1+):
+     *    $v->forKey('ages')->arrayApply($v->int(...), 0, 150);
+     *
+     * 3. グローバル関数を指定:
+     *    $v->forKey('ids')->arrayApply('is_numeric');
+     *
+     * 4. クロージャを指定 (第1引数に要素、第2引数以降に $args が渡されます):
+     *    $v->forKey('items')->arrayApply(function($item, $min) {
+     *        return strlen($item) >= $min;
+     *    }, 5);
+     *
+     * 5. Validator インスタンスを操作するクロージャを指定 (引数なしの場合):
+     *    $v->forKey('codes')->arrayApply(function() {
+     *        $this->string()->regex('/^[A-Z]+$/');
+     *    });
+     *
+     * @param callable $validator
+     * @param mixed ...$args
+     * @return $this
      * @throws ReflectionException
      */
     public function arrayApply(callable $validator, mixed ...$args): static
