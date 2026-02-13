@@ -34,6 +34,8 @@ class Lean extends Validator
 
             if (!$rule($this->getCurrentValue())) {
                 $this->setError($msg);
+            } else {
+                $this->validatedData[$this->currentKey] = $this->getCurrentValue();
             }
             return $this;
         }
@@ -50,6 +52,7 @@ class Lean extends Validator
         if (!is_int($value) || ($min !== null && $value < $min) || ($max !== null && $value > $max)) {
             return $this->setError($msg);
         }
+        $this->validatedData[$this->currentKey] = $value;
         return $this;
     }
 

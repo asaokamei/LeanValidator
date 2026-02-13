@@ -9,6 +9,7 @@ use ReflectionFunction;
 class Validator
 {
     protected array $data = [];
+    protected array $validatedData = [];
     private MessageBag $errors;
     protected string $currentKey = '';
     private string $currentErrMsg = '';
@@ -57,9 +58,9 @@ class Validator
         $this->data[$this->currentKey] = $option;
         return false;
     }
-    public function setError(): static
+    public function setError(string $msg = null): static
     {
-        $this->errors->add($this->currentErrMsg, $this->currentKey);
+        $this->errors->add($msg ?? $this->currentErrMsg, $this->currentKey);
         $this->currentErrFlag = true;
         return $this;
     }
@@ -100,12 +101,25 @@ class Validator
     }
 
     /**
+     * @return array
+     */
+    public function getValidatedData(): array
+    {
+        if (!$this->isValid()) {
+            throw new \RuntimeException('Validation failed.');
+        }
+        return $this->validatedData;
+    }
+
+    /**
      * 必須チェック: フィールドが存在し、空でないこと
      */
     public function required(): static
     {
         if (!$this->hasValue()) {
             $this->setError();
+        } else {
+            $this->validatedData[$this->currentKey] = $this->getCurrentValue();
         }
         return $this;
     }
@@ -116,8 +130,11 @@ class Validator
     public function string(): static
     {
         if ($this->currentErrFlag) return $this;
-        if (!is_string($this->getCurrentValue())) {
+        $value = $this->getCurrentValue();
+        if (!is_string($value)) {
             $this->setError();
+        } else {
+            $this->validatedData[$this->currentKey] = $value;
         }
         return $this;
     }
@@ -139,6 +156,9 @@ class Validator
         if ($max !== null && $value > $max) {
             $this->setError();
         }
+        if ($this->isCurrentOK()) {
+            $this->validatedData[$this->currentKey] = $value;
+        }
         return $this;
     }
 
@@ -152,6 +172,8 @@ class Validator
             $value = $this->getCurrentValue();
             if (filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
                 $this->setError();
+            } else {
+                $this->validatedData[$this->currentKey] = $value;
             }
         }
 
@@ -170,6 +192,8 @@ class Validator
             $value = $this->getCurrentValue();
             if (preg_match($pattern, $value) !== 1) {
                 $this->setError();
+            } else {
+                $this->validatedData[$this->currentKey] = $value;
             }
         }
         return $this;
@@ -190,6 +214,9 @@ class Validator
         }
         if ($max !== null && count($value) > $max) {
             $this->setError();
+        }
+        if ($this->isCurrentOK()) {
+            $this->validatedData[$this->currentKey] = $value;
         }
         return $this;
     }
@@ -223,7 +250,7 @@ class Validator
      * @return $this
      * @throws ReflectionException
      */
-    public function arrayApply(callable $validator, mixed ...$args): static
+    public function arrayApply(mixed $validator, mixed ...$args): static
     {
         if ($this->currentErrFlag) return $this;
         $value = $this->getCurrentValue();
@@ -234,6 +261,7 @@ class Validator
         }
 
         $hasItemErrors = false;
+        $validatedItems = [];
 
         foreach ($value as $key => $item) {
             if (is_array($item)) {
@@ -277,10 +305,15 @@ class Validator
             if ($child->isCurrentError()) {
                 $this->errors->add($this->currentErrMsg, $this->currentKey, (string)$key);
                 $hasItemErrors = true;
+            } else {
+                $childData = $child->getValidatedData();
+                $validatedItems[$key] = $childData[$key] ?? $item;
             }
         }
         if ($hasItemErrors) {
             $this->currentErrFlag = true;
+        } else {
+            $this->validatedData[$this->currentKey] = $validatedItems;
         }
         return $this;
     }
@@ -305,6 +338,7 @@ class Validator
         }
 
         $hasItemErrors = false;
+        $validatedItems = [];
 
         foreach ($value as $key => $item) {
             if (!is_array($item)) {
@@ -319,10 +353,14 @@ class Validator
                     $this->errors->add($message, $this->currentKey, (string)$key, $childKey);
                     $hasItemErrors = true;
                 }
+            } else {
+                $validatedItems[$key] = $child->getValidatedData();
             }
         }
         if ($hasItemErrors) {
             $this->currentErrFlag = true;
+        } else {
+            $this->validatedData[$this->currentKey] = $validatedItems;
         }
         return $this;
     }
