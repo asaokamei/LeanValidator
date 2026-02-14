@@ -14,6 +14,11 @@
             "Wscore\\LeanValidator\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Wscore\\LeanValidator\\Tests\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "亀井亜佐夫",
