@@ -7,10 +7,10 @@ use ReflectionException;
 use ReflectionFunction;
 
 /**
- * @method $this int(?int $min = null, ?int $max = null, ?string $msg = null)
- * @method $this string(?string $msg = null)
- * @method $this email(?string $msg = null)
- * @method $this regex(string $pattern, ?string $msg = null)
+ * @method $this int(?int $min = null, ?int $max = null)
+ * @method $this string()
+ * @method $this email()
+ * @method $this regex(string $pattern)
  * @　method $this unique(\PDO $db, string $table, ?string $msg = null)
  */
 class Validator
@@ -61,16 +61,9 @@ class Validator
         if (is_string($validator)) {
             $internal = '_' . $validator;
             if (method_exists($this, $internal)) {
-                $reflection = new \ReflectionMethod($this, $internal);
-                $numParams = $reflection->getNumberOfParameters();
-                $numArgs = count($args);
-                $msg = ($numArgs > 0 && is_string(end($args)) && $numArgs > $numParams)
-                    ? array_pop($args)
-                    : null;
-
                 $result = $this->$internal(...$args);
                 if ($result === false) {
-                    $this->setError($msg);
+                    $this->setError();
                 } elseif ($this->isCurrentOK()) {
                     $this->validatedData[$this->currentKey] = $this->getCurrentValue();
                 }
@@ -94,19 +87,13 @@ class Validator
                 }
             }
             $numParams = $reflection->getNumberOfParameters();
-            $numArgs = count($args);
-            // クロージャが期待する引数（$value + $argsの一部）より多ければ、最後の引数をメッセージとみなす
-            // $value が自動的に渡されるため、実質的な引数数は $numArgs + 1
-            $msg = ($numArgs > 0 && is_string(end($args)) && ($numArgs + 1) > $numParams)
-                ? array_pop($args)
-                : null;
             if ($numParams === 0) {
                 $result = $validator->call($this);
             } else {
                 $result = $validator->call($this, $this->getCurrentValue(), ...$args);
             }
             if ($result === false) {
-                $this->setError($msg);
+                $this->setError();
             } elseif ($this->isCurrentOK()) {
                 $this->validatedData[$this->currentKey] = $this->getCurrentValue();
             }
@@ -117,10 +104,9 @@ class Validator
         if (is_string($validator)) {
             $external = "Asao\\Rules\\" . ucfirst($validator);
             if (class_exists($external)) {
-                $msg = (count($args) > 0 && is_string(end($args))) ? array_pop($args) : null;
                 $rule = new $external(...$args);
                 if (!$rule($this->getCurrentValue())) {
-                    $this->setError($msg);
+                    $this->setError();
                 } else {
                     $this->validatedData[$this->currentKey] = $this->getCurrentValue();
                 }
@@ -130,24 +116,11 @@ class Validator
 
         // 4. その他の callable
         if (is_callable($validator)) {
-            $numArgs = count($args);
-            // callable の場合は最後の引数が string ならメッセージ候補として扱う
-            $msg = ($numArgs > 0 && is_string(end($args))) ? end($args) : null;
 
-            try {
-                $result = $validator($this->getCurrentValue(), ...$args);
-            } catch (\ArgumentCountError $e) {
-                // 引数が多い場合はメッセージを外して再試行
-                if ($msg !== null) {
-                    array_pop($args);
-                    $result = $validator($this->getCurrentValue(), ...$args);
-                } else {
-                    throw $e;
-                }
-            }
+            $result = $validator($this->getCurrentValue(), ...$args);
 
             if ($result === false) {
-                $this->setError($msg);
+                $this->setError();
             } elseif ($this->isCurrentOK()) {
                 $this->validatedData[$this->currentKey] = $this->getCurrentValue();
             }
@@ -168,6 +141,34 @@ class Validator
         return $this;
     }
 
+    public function required(?string $msg = 'Name is required'): static
+    {
+        if (!$this->hasValue()) {
+            $this->setError($msg);
+        }
+        return $this;
+    }
+
+    public function arrayCount(?int $min = 1, ?int $max = null, ?string $msg = 'Please select the values.'): static
+    {
+        $value = $this->getCurrentValue();
+
+        if (!is_array($value)) {
+            $this->setError($msg);
+        } elseif ($min !== null && count($value) < $min) {
+            $this->setError($msg);
+        } elseif ($max !== null && count($value) > $max) {
+            $this->setError($msg);
+        }
+        return $this;
+    }
+
+    public function message(string $msg): static
+    {
+        $this->currentErrMsg = $msg;
+        return $this;
+    }
+
     protected function getCurrentValue(): mixed
     {
         return $this->data[$this->currentKey] ?? null;
@@ -183,7 +184,7 @@ class Validator
         $this->data[$this->currentKey] = $option;
         return false;
     }
-    public function setError(string $msg = null): static
+    protected function setError(string $msg = null): static
     {
         $this->errors->add($msg ?? $this->currentErrMsg, $this->currentKey);
         $this->currentErrFlag = true;
@@ -234,17 +235,6 @@ class Validator
             throw new \RuntimeException('Validation failed.');
         }
         return $this->validatedData;
-    }
-
-    /**
-     * 必須チェック: フィールドが存在し、空でないこと
-     */
-    protected function _required(): bool
-    {
-        if (!$this->hasValue()) {
-            return false;
-        }
-        return true;
     }
 
     /**
@@ -308,22 +298,6 @@ class Validator
             return true;
         }
         return false;
-    }
-
-    protected function _arrayCount($min = 1, $max = null): bool
-    {
-        $value = $this->getCurrentValue();
-
-        if (!is_array($value)) {
-            return false;
-        }
-        if (count($value) < $min) {
-            return false;
-        }
-        if ($max !== null && count($value) > $max) {
-            return false;
-        }
-        return true;
     }
 
     /**

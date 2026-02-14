@@ -27,7 +27,7 @@ class ApplyTest extends TestCase
         });
         $this->assertTrue($v->isCurrentOK());
 
-        $v->forKey('name')->apply(function($value, $expected) {
+        $v->forKey('name')->message('Name must be Jane')->apply(function($value, $expected) {
             return $value === $expected;
         }, 'Jane', 'Name must be Jane');
         $this->assertTrue($v->isCurrentError());
@@ -59,7 +59,7 @@ class ApplyTest extends TestCase
         $v->forKey('name')->apply('is_string');
         $this->assertTrue($v->isCurrentOK());
 
-        $v->forKey('name')->apply('is_int', 'Must be int');
+        $v->forKey('name', 'Must be int')->apply('is_int');
         $this->assertTrue($v->isCurrentError());
         $this->assertEquals('Must be int', $v->getErrorsFlat()['name']);
     }
