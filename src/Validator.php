@@ -11,10 +11,18 @@ use RuntimeException;
 /**
  * @method $this int(?int $min = null, ?int $max = null)
  * @method $this string()
- * @method $this email()
  * @method $this filterVar(string $filter)
+ * @method $this email()
+ * @method $this float()
+ * @method $this url()
  * @method $this regex(string $pattern)
- * @　method $this unique(\PDO $db, string $table, ?string $msg = null)
+ * @method $this alnum()
+ * @method $this alpha()
+ * @method $this numeric()
+ * @method $this in(array $choices)
+ * @method $this contains(string $needle)
+ * @method $this equalTo(mixed $expect)
+ * @method $this length(?int $min = null, ?int $max = null)
  */
 class Validator
 {
@@ -24,6 +32,11 @@ class Validator
 
     public array $rules = [
         'email' => ['filterVar', [FILTER_VALIDATE_EMAIL]],
+        'float' => ['filterVar', [FILTER_VALIDATE_FLOAT]],
+        'url' => ['filterVar', [FILTER_VALIDATE_URL]],
+        'alnum' => ['regex', ['/^[a-zA-Z0-9]+$/']],
+        'alpha' => ['regex', ['/^[a-zA-Z]+$/']],
+        'numeric' => ['regex', ['/^[0-9]+$/']],
     ];
 
     public function __construct(array $data)
@@ -188,7 +201,7 @@ class Validator
         return $this;
     }
 
-    public function setErrors(array $errors, string ...$path): static
+    protected function setErrors(array $errors, string ...$path): static
     {
         $currentKey = $this->context->getCurrentKey();
         if (empty($path) && $currentKey !== '' && $currentKey !== '__current_item__') {
@@ -231,9 +244,6 @@ class Validator
         return $this->errors->isEmpty();
     }
 
-    /**
-     * @return array
-     */
     public function getValidatedData(): array
     {
         if (!$this->isValid()) {
@@ -266,6 +276,32 @@ class Validator
     {
         $value = $this->getCurrentValue();
         return is_string($value) && preg_match($pattern, $value) === 1;
+    }
+
+    protected function _in(array $choices): bool
+    {
+        return in_array($this->getCurrentValue(), $choices, true);
+    }
+
+    protected function _contains(string $needle): bool
+    {
+        $value = $this->getCurrentValue();
+        return is_string($value) && str_contains($value, $needle);
+    }
+
+    protected function _equalTo(mixed $expect): bool
+    {
+        return $this->getCurrentValue() === $expect;
+    }
+
+    protected function _length(?int $min = null, ?int $max = null): bool
+    {
+        $value = $this->getCurrentValue();
+        if (!is_string($value)) return false;
+        $len = mb_strlen($value);
+        if ($min !== null && $len < $min) return false;
+        if ($max !== null && $len > $max) return false;
+        return true;
     }
 
     /**
