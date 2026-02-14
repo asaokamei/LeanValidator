@@ -73,6 +73,28 @@ class Validator
     /**
      * バリデーションを適用します。
      *
+     * $validator には以下のいずれかを指定できます：
+     *
+     * 1. 内部メソッドを文字列で指定:
+     *    $v->forKey('age')->apply('int', 18, 100);
+     *
+     * 2. クロージャを指定 ($this がバインドされ、引数として $value と $args が渡されます):
+     *    $v->forKey('name')->apply(function($value) {
+     *        return strlen($value) > 5;
+     *    });
+     *
+     * 3. $this を操作するクロージャを指定 (引数なしの場合):
+     *    $v->forKey('zip')->apply(function() {
+     *        $this->regex('/^\d{3}-\d{4}$/');
+     *    });
+     *
+     * 4. その他の callable を指定 (関数、インスタンス化した invokable オブジェクトなど):
+     *    $v->forKey('email')->apply('is_string');
+     *    $v->forKey('price')->apply(new MyInvokableRule(), $minPrice);
+     *
+     * 5. 外部ルールクラス名を指定 (文字列として指定、実行時にインスタンス化されます):
+     *    $v->forKey('price')->apply(MyCustomRule::class, $minPrice);
+     *
      * @param mixed $validator
      * @param mixed ...$args
      * @return $this
