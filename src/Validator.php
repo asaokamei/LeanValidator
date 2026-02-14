@@ -22,6 +22,7 @@ class Validator
     protected string $currentKey = '';
     private string $currentErrMsg = '';
     protected bool $currentErrFlag = false;
+    protected bool $currentSkipped = false;
     public array $rules = [
         'email' => ['filterVar', [FILTER_VALIDATE_EMAIL]],
     ];
@@ -59,7 +60,7 @@ class Validator
      */
     public function apply(mixed $validator, mixed ...$args): static
     {
-        if ($this->currentErrFlag) {
+        if ($this->currentErrFlag || $this->currentSkipped) {
             return $this;
         }
 
@@ -146,6 +147,7 @@ class Validator
         $this->currentKey = $key;
         $this->currentErrMsg = $errorMsg;
         $this->currentErrFlag = false;
+        $this->currentSkipped = false;
         return $this;
     }
 
@@ -153,6 +155,15 @@ class Validator
     {
         if (!$this->hasValue()) {
             $this->setError($msg);
+        }
+        return $this;
+    }
+
+    public function optional(mixed $default = null): static
+    {
+        if (!$this->hasValue($default)) {
+            $this->validatedData[$this->currentKey] = $default;
+            $this->currentSkipped = true;
         }
         return $this;
     }
@@ -198,10 +209,17 @@ class Validator
         $this->currentErrFlag = true;
         return $this;
     }
+
     public function isCurrentError(): bool
     {
         return $this->currentErrFlag;
     }
+
+    public function isSkipped(): bool
+    {
+        return $this->currentSkipped;
+    }
+
     public function isCurrentOK(): bool
     {
         return !$this->currentErrFlag;
@@ -360,9 +378,11 @@ class Validator
             if ($child->isCurrentError()) {
                 $this->errors->add($this->currentErrMsg, $this->currentKey, (string)$key);
                 $hasItemErrors = true;
-            } else {
+            } elseif (!$child->isSkipped()) {
                 $childData = $child->getValidatedData();
                 $validatedItems[$key] = $childData[$key] ?? $item;
+            } else {
+                $validatedItems[$key] = $item;
             }
         }
         if ($hasItemErrors) {
