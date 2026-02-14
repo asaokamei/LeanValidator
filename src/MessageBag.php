@@ -71,6 +71,22 @@ class MessageBag
         return empty($this->messages);
     }
 
+    public function setErrors(array $errors, string ...$path): void
+    {
+        $basePath = self::buildPath($path);
+        foreach ($errors as $key => $messages) {
+            $fullPath = $basePath !== '' ? $basePath . '.' . $key : $key;
+            if (is_array($messages) && !isset($messages[0])) {
+                // If it's an associative array (nested errors), recurse.
+                $this->setErrors($messages, $fullPath);
+                continue;
+            }
+            foreach ((array)$messages as $message) {
+                $this->messages[$fullPath][] = $message;
+            }
+        }
+    }
+
     private static function buildPath(array $path, string $separator = '.'): string
     {
         $segments = [];
