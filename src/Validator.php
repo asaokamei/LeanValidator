@@ -339,21 +339,14 @@ class Validator
         $value = $this->getCurrentValue();
         if (!is_array($value)) return $this->setError();
 
-        $itemErrors = [];
-        $validatedItems = [];
+        $child = static::make($value);
         foreach ($value as $key => $item) {
-            $child = static::make(['v' => $item])->forKey('v');
-            $child->apply($validator, ...$args);
-            if ($child->isCurrentError()) {
-                $itemErrors[$key] = [$this->errorMessage];
-            } else {
-                $validatedItems[$key] = $child->getValidatedData()['v'] ?? $item;
-            }
+            $child->forKey((string)$key)->apply($validator, ...$args);
         }
-        if ($itemErrors) {
-            $this->setErrors($itemErrors);
+        if (!$child->isValid()) {
+            $this->setErrors($child->getErrors()->toArray());
         } else {
-            $this->context->setValidatedData($validatedItems);
+            $this->context->setValidatedData($child->getValidatedData());
         }
         return $this;
     }
@@ -373,21 +366,26 @@ class Validator
         $value = $this->getCurrentValue();
         if (!is_array($value)) return $this->setError();
 
-        $itemErrors = [];
-        $validatedItems = [];
+        $childValidator = static::make($value);
         foreach ($value as $key => $item) {
-            $child = self::make($item);
+            if (!is_array($item)) {
+                $childValidator->forKey((string)$key)->setError('Value is not an array.');
+                continue;
+            }
+            $child = static::make($item);
             $callback($child);
             if (!$child->isValid()) {
-                $itemErrors[$key] = $child->getErrors()->toArray();
+                $childValidator->setErrors($child->getErrors()->toArray(), (string)$key);
             } else {
-                $validatedItems[$key] = $child->getValidatedData();
+                $childValidator->forKey((string)$key);
+                $childValidator->context->setValidatedData($child->getValidatedData());
             }
         }
-        if ($itemErrors) {
-            $this->setErrors($itemErrors);
+
+        if (!$childValidator->isValid()) {
+            $this->setErrors($childValidator->getErrors()->toArray());
         } else {
-            $this->context->setValidatedData($validatedItems);
+            $this->context->setValidatedData($childValidator->getValidatedData());
         }
         return $this;
     }
