@@ -10,6 +10,7 @@ use ReflectionFunction;
  * @method $this int(?int $min = null, ?int $max = null)
  * @method $this string()
  * @method $this email()
+ * @method $this filterVar(string $filter)
  * @method $this regex(string $pattern)
  * @　method $this unique(\PDO $db, string $table, ?string $msg = null)
  */
@@ -21,7 +22,9 @@ class Validator
     protected string $currentKey = '';
     private string $currentErrMsg = '';
     protected bool $currentErrFlag = false;
-
+    public array $rules = [
+        'email' => ['filterVar', [FILTER_VALIDATE_EMAIL]],
+    ];
     public function __construct(array $data) 
     {
         $this->setData($data);
@@ -40,6 +43,11 @@ class Validator
     }
     public function __call(string $name, array $args): static
     {
+        if (isset($this->rules[$name])) {
+            $validator = $this->rules[$name][0];
+            $args = $this->rules[$name][1] ?? [];
+            return $this->apply($validator, ...$args);
+        }
         return $this->apply($name, ...$args);
     }
     /**
@@ -267,14 +275,11 @@ class Validator
         return true;
     }
 
-    /**
-     * メールアドレス形式チェック
-     */
-    protected function _email(): bool
+    protected function _filterVar(string $filter): bool
     {
         if ($this->_string()) {
             $value = $this->getCurrentValue();
-            if (filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
+            if (filter_var($value, $filter) === false) {
                 return false;
             }
             return true;
