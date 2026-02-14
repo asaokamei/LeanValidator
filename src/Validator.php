@@ -6,6 +6,13 @@ use Closure;
 use ReflectionException;
 use ReflectionFunction;
 
+/**
+ * @method $this int(?int $min = null, ?int $max = null, ?string $msg = null)
+ * @method $this string(?string $msg = null)
+ * @method $this email(?string $msg = null)
+ * @method $this regex(string $pattern, ?string $msg = null)
+ * @　method $this unique(\PDO $db, string $table, ?string $msg = null)
+ */
 class Validator
 {
     protected array $data = [];
@@ -30,6 +37,119 @@ class Validator
             return $self;
         }
         return new static([]);
+    }
+    public function __call(string $name, array $args): static
+    {
+        return $this->apply($name, ...$args);
+    }
+    /**
+     * バリデーションを適用します。
+     *
+     * @param mixed $validator
+     * @param mixed ...$args
+     * @return $this
+     */
+    public function apply(mixed $validator, mixed ...$args): static
+    {
+        if ($this->currentErrFlag) {
+            return $this;
+        }
+
+        // 1. 内部メソッドの探索 (_name)
+        if (is_string($validator)) {
+            $internal = '_' . $validator;
+            if (method_exists($this, $internal)) {
+                $this->$internal(...$args);
+                if ($this->isCurrentOK()) {
+                    $this->validatedData[$this->currentKey] = $this->getCurrentValue();
+                }
+                return $this;
+            }
+        }
+
+        // 2. クロージャの実行
+        if ($validator instanceof Closure) {
+            $reflection = new ReflectionFunction($validator);
+            $methodName = $reflection->getName();
+            if ($methodName !== '{closure}') {
+                if (method_exists($this, $methodName)) {
+                    $this->{$methodName}(...$args);
+                    if ($this->isCurrentOK()) {
+                        $this->validatedData[$this->currentKey] = $this->getCurrentValue();
+                    }
+                    return $this;
+                }
+                // First-class callable の場合、メソッド名が int などの場合がある
+                if (method_exists($this, '_' . $methodName)) {
+                    $this->{'_' . $methodName}(...$args);
+                    if ($this->isCurrentOK()) {
+                        $this->validatedData[$this->currentKey] = $this->getCurrentValue();
+                    }
+                    return $this;
+                }
+            }
+            $numParams = $reflection->getNumberOfParameters();
+            $numArgs = count($args);
+            // クロージャが期待する引数（$value + $argsの一部）より多ければ、最後の引数をメッセージとみなす
+            // $value が自動的に渡されるため、実質的な引数数は $numArgs + 1
+            $msg = ($numArgs > 0 && is_string(end($args)) && ($numArgs + 1) > $numParams)
+                ? array_pop($args)
+                : null;
+            if ($numParams === 0) {
+                $result = $validator->call($this);
+            } else {
+                $result = $validator->call($this, $this->getCurrentValue(), ...$args);
+            }
+            if ($result === false) {
+                $this->setError($msg);
+            } elseif ($this->isCurrentOK()) {
+                $this->validatedData[$this->currentKey] = $this->getCurrentValue();
+            }
+            return $this;
+        }
+
+        // 3. 外部ルールクラスの探索 (__invoke)
+        if (is_string($validator)) {
+            $external = "Asao\\Rules\\" . ucfirst($validator);
+            if (class_exists($external)) {
+                $msg = (count($args) > 0 && is_string(end($args))) ? array_pop($args) : null;
+                $rule = new $external(...$args);
+                if (!$rule($this->getCurrentValue())) {
+                    $this->setError($msg);
+                } else {
+                    $this->validatedData[$this->currentKey] = $this->getCurrentValue();
+                }
+                return $this;
+            }
+        }
+
+        // 4. その他の callable
+        if (is_callable($validator)) {
+            $numArgs = count($args);
+            // callable の場合は最後の引数が string ならメッセージ候補として扱う
+            $msg = ($numArgs > 0 && is_string(end($args))) ? end($args) : null;
+
+            try {
+                $result = $validator($this->getCurrentValue(), ...$args);
+            } catch (\ArgumentCountError $e) {
+                // 引数が多い場合はメッセージを外して再試行
+                if ($msg !== null) {
+                    array_pop($args);
+                    $result = $validator($this->getCurrentValue(), ...$args);
+                } else {
+                    throw $e;
+                }
+            }
+
+            if ($result === false) {
+                $this->setError($msg);
+            } elseif ($this->isCurrentOK()) {
+                $this->validatedData[$this->currentKey] = $this->getCurrentValue();
+            }
+            return $this;
+        }
+
+        throw new \BadMethodCallException("Rule [{$validator}] is not defined.");
     }
     protected function setData(array $data): void
     {
@@ -114,12 +234,10 @@ class Validator
     /**
      * 必須チェック: フィールドが存在し、空でないこと
      */
-    public function required(): static
+    protected function _required(?string $msg = null): static
     {
         if (!$this->hasValue()) {
-            $this->setError();
-        } else {
-            $this->validatedData[$this->currentKey] = $this->getCurrentValue();
+            $this->setError($msg);
         }
         return $this;
     }
@@ -127,14 +245,11 @@ class Validator
     /**
      * 文字列型チェック
      */
-    public function string(): static
+    protected function _string(?string $msg = null): static
     {
-        if ($this->currentErrFlag) return $this;
         $value = $this->getCurrentValue();
         if (!is_string($value)) {
-            $this->setError();
-        } else {
-            $this->validatedData[$this->currentKey] = $value;
+            $this->setError($msg);
         }
         return $this;
     }
@@ -142,22 +257,18 @@ class Validator
     /**
      * 整数型チェック
      */
-    public function int(?int $min = null, ?int $max = null): static
+    protected function _int(?int $min = null, ?int $max = null, ?string $msg = null): static
     {
-        if ($this->currentErrFlag) return $this;
         $value = $this->getCurrentValue();
         if (!is_int($value)) {
-            $this->setError();
+            $this->setError($msg);
             return $this;
         }
         if ($min !== null && $value < $min) {
-            $this->setError();
+            $this->setError($msg);
         }
         if ($max !== null && $value > $max) {
-            $this->setError();
-        }
-        if ($this->isCurrentOK()) {
-            $this->validatedData[$this->currentKey] = $value;
+            $this->setError($msg);
         }
         return $this;
     }
@@ -165,15 +276,12 @@ class Validator
     /**
      * メールアドレス形式チェック
      */
-    public function email(): static
+    protected function _email(?string $msg = null): static
     {
-        if ($this->currentErrFlag) return $this;
-        if ($this->string()->isCurrentOK()) {
+        if ($this->_string($msg)->isCurrentOK()) {
             $value = $this->getCurrentValue();
             if (filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
-                $this->setError();
-            } else {
-                $this->validatedData[$this->currentKey] = $value;
+                $this->setError($msg);
             }
         }
 
@@ -185,38 +293,31 @@ class Validator
      *
      * @param string $pattern 正規表現パターン（デリミタ含む）
      */
-    public function regex(string $pattern): static
+    protected function _regex(string $pattern, ?string $msg = null): static
     {
-        if ($this->currentErrFlag) return $this;
-        if ($this->string()->isCurrentOK()) {
+        if ($this->_string($msg)->isCurrentOK()) {
             $value = $this->getCurrentValue();
             if (preg_match($pattern, $value) !== 1) {
-                $this->setError();
-            } else {
-                $this->validatedData[$this->currentKey] = $value;
+                $this->setError($msg);
             }
         }
         return $this;
     }
 
-    public function arrayCount($min = 1, $max = null): static
+    protected function _arrayCount($min = 1, $max = null, ?string $msg = null): static
     {
-        if ($this->currentErrFlag) return $this;
         $value = $this->getCurrentValue();
 
         if (!is_array($value)) {
-            $this->setError();
+            $this->setError($msg);
             return $this;
         }
         if (count($value) < $min) {
-            $this->setError();
+            $this->setError($msg);
             return $this;
         }
         if ($max !== null && count($value) > $max) {
-            $this->setError();
-        }
-        if ($this->isCurrentOK()) {
-            $this->validatedData[$this->currentKey] = $value;
+            $this->setError($msg);
         }
         return $this;
     }
@@ -270,37 +371,8 @@ class Validator
             }
             $child = static::make([$key => $item]);
             $child->forKey($key, $this->currentErrMsg);
-            if ($validator instanceof Closure) {
-                $reflection = new ReflectionFunction($validator);
-                $methodName = $reflection->getName();
-                if ($methodName !== '{closure}' && method_exists($child, $methodName)) {
-                    $child->{$methodName}(...$args);
-                } else {
-                    if ($reflection->getNumberOfParameters() === 0) {
-                        $result = $validator->call($child);
-                    } else {
-                        $result = $validator->call($child, $item, ...$args);
-                    }
-                    if ($result === false) {
-                        $child->setError();
-                    }
-                }
-            } elseif (
-                is_array($validator)
-                && count($validator) === 2
-                && is_string($validator[1])
-                && method_exists($child, $validator[1])
-            ) {
-                $child->{$validator[1]}(...$args);
-            } elseif (is_string($validator) && method_exists($child, $validator)) {
-                $child->{$validator}(...$args);
-            } else {
-                $callable = $validator;
-                $result = $callable($item, ...$args);
-                if ($result === false) {
-                    $child->setError();
-                }
-            }
+
+            $child->apply($validator, ...$args);
 
             if ($child->isCurrentError()) {
                 $this->errors->add($this->currentErrMsg, $this->currentKey, (string)$key);
