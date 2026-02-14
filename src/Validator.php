@@ -55,12 +55,23 @@ class Validator
             return $this;
         }
 
+        $result = true;
+
         // 1. 内部メソッドの探索 (_name)
         if (is_string($validator)) {
             $internal = '_' . $validator;
             if (method_exists($this, $internal)) {
-                $this->$internal(...$args);
-                if ($this->isCurrentOK()) {
+                $reflection = new \ReflectionMethod($this, $internal);
+                $numParams = $reflection->getNumberOfParameters();
+                $numArgs = count($args);
+                $msg = ($numArgs > 0 && is_string(end($args)) && $numArgs > $numParams)
+                    ? array_pop($args)
+                    : null;
+
+                $result = $this->$internal(...$args);
+                if ($result === false) {
+                    $this->setError($msg);
+                } elseif ($this->isCurrentOK()) {
                     $this->validatedData[$this->currentKey] = $this->getCurrentValue();
                 }
                 return $this;
@@ -73,18 +84,12 @@ class Validator
             $methodName = $reflection->getName();
             if ($methodName !== '{closure}') {
                 if (method_exists($this, $methodName)) {
-                    $this->{$methodName}(...$args);
-                    if ($this->isCurrentOK()) {
-                        $this->validatedData[$this->currentKey] = $this->getCurrentValue();
-                    }
+                    $this->apply($methodName, ...$args);
                     return $this;
                 }
                 // First-class callable の場合、メソッド名が int などの場合がある
                 if (method_exists($this, '_' . $methodName)) {
-                    $this->{'_' . $methodName}(...$args);
-                    if ($this->isCurrentOK()) {
-                        $this->validatedData[$this->currentKey] = $this->getCurrentValue();
-                    }
+                    $this->apply($methodName, ...$args);
                     return $this;
                 }
             }
@@ -234,58 +239,58 @@ class Validator
     /**
      * 必須チェック: フィールドが存在し、空でないこと
      */
-    protected function _required(?string $msg = null): static
+    protected function _required(): bool
     {
         if (!$this->hasValue()) {
-            $this->setError($msg);
+            return false;
         }
-        return $this;
+        return true;
     }
 
     /**
      * 文字列型チェック
      */
-    protected function _string(?string $msg = null): static
+    protected function _string(): bool
     {
         $value = $this->getCurrentValue();
         if (!is_string($value)) {
-            $this->setError($msg);
+            return false;
         }
-        return $this;
+        return true;
     }
 
     /**
      * 整数型チェック
      */
-    protected function _int(?int $min = null, ?int $max = null, ?string $msg = null): static
+    protected function _int(?int $min = null, ?int $max = null): bool
     {
         $value = $this->getCurrentValue();
         if (!is_int($value)) {
-            $this->setError($msg);
-            return $this;
+            return false;
         }
         if ($min !== null && $value < $min) {
-            $this->setError($msg);
+            return false;
         }
         if ($max !== null && $value > $max) {
-            $this->setError($msg);
+            return false;
         }
-        return $this;
+        return true;
     }
 
     /**
      * メールアドレス形式チェック
      */
-    protected function _email(?string $msg = null): static
+    protected function _email(): bool
     {
-        if ($this->_string($msg)->isCurrentOK()) {
+        if ($this->_string()) {
             $value = $this->getCurrentValue();
             if (filter_var($value, FILTER_VALIDATE_EMAIL) === false) {
-                $this->setError($msg);
+                return false;
             }
+            return true;
         }
 
-        return $this;
+        return false;
     }
 
     /**
@@ -293,33 +298,32 @@ class Validator
      *
      * @param string $pattern 正規表現パターン（デリミタ含む）
      */
-    protected function _regex(string $pattern, ?string $msg = null): static
+    protected function _regex(string $pattern): bool
     {
-        if ($this->_string($msg)->isCurrentOK()) {
+        if ($this->_string()) {
             $value = $this->getCurrentValue();
             if (preg_match($pattern, $value) !== 1) {
-                $this->setError($msg);
+                return false;
             }
+            return true;
         }
-        return $this;
+        return false;
     }
 
-    protected function _arrayCount($min = 1, $max = null, ?string $msg = null): static
+    protected function _arrayCount($min = 1, $max = null): bool
     {
         $value = $this->getCurrentValue();
 
         if (!is_array($value)) {
-            $this->setError($msg);
-            return $this;
+            return false;
         }
         if (count($value) < $min) {
-            $this->setError($msg);
-            return $this;
+            return false;
         }
         if ($max !== null && count($value) > $max) {
-            $this->setError($msg);
+            return false;
         }
-        return $this;
+        return true;
     }
 
     /**
