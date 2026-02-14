@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection PhpUnused */
 
 namespace Wscore\LeanValidator;
 
@@ -298,7 +298,11 @@ class Validator
     {
         $value = $this->getCurrentValue();
         if (!is_string($value)) return false;
-        $len = mb_strlen($value);
+        if (function_exists('mb_strlen')) {
+            $len = mb_strlen($value);
+        } else {
+            $len = strlen($value);
+        }
         if ($min !== null && $len < $min) return false;
         if ($max !== null && $len > $max) return false;
         return true;
