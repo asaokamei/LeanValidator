@@ -170,18 +170,67 @@ class Validator
         return $this;
     }
 
-    public function required(?string $msg = 'Name is required'): static
+    public function required(?string $msg = null): static
     {
         if (!$this->hasValue()) $this->setError($msg);
         return $this;
     }
 
+    /**
+     * 条件付き required.
+     *
+     * - 条件が true: required($msg) を適用（以降のルールも通常通り評価）
+     * - 条件が false:
+     *     - elseOverwrite が指定されていれば、その値で強制上書きして以降を skip
+     *     - 指定されていなければ optional($default) 扱い（else不要）
+     *
+     * $expect はスカラーまたは配列（複数ケース）を受け付けます。
+     */
+    public function requiredIf(
+        string $otherKey,
+        mixed $expect,
+        ?string $msg = null,
+        mixed $elseOverwrite = null
+    ): static {
+        if ($this->context->isCurrentError() || $this->context->isSkipped()) {
+            return $this;
+        }
+
+        $otherValue = $this->getValueAtKey($otherKey);
+
+        $matched = is_array($expect)
+            ? in_array($otherValue, $expect, true)
+            : ($otherValue === $expect);
+
+        if ($matched) {
+            return $this->required($msg);
+        }
+
+        $args = func_get_args();
+        $hasElseOverwrite = array_key_exists(3, $args) || array_key_exists('elseOverwrite', $args);
+        if ($hasElseOverwrite) {
+            $this->context->setValidatedData($elseOverwrite);
+            $this->context->setSkipped(true);
+            return $this;
+        }
+
+        return $this->optional();
+    }
+
     public function optional(mixed $default = null): static
     {
-        if (!$this->hasValue($default)) {
-            $this->context->setValidatedData($default);
-            $this->context->setSkipped(true);
+        if ($this->hasValue()) {
+            return $this;
         }
+
+        $args = func_get_args();
+        $hasDefault = array_key_exists(0, $args) || array_key_exists('default', $args);
+
+        if ($hasDefault) {
+            $this->context->setValidatedData($default);
+        }
+
+        $this->context->setSkipped(true);
         return $this;
     }
 
@@ -205,9 +254,9 @@ class Validator
         return $this->context->getCurrentValue();
     }
 
-    public function hasValue($option = ''): bool
+    public function hasValue(): bool
     {
-        return $this->context->hasValue($option);
+        return $this->context->hasValue();
     }
 
     protected function setError(string $msg = null): static
@@ -414,6 +463,11 @@ class Validator
             $this->context->setValidatedData($childValidator->getValidatedData());
         }
         return $this;
+    }
+
+    public function getValueAtKey(string $key): mixed
+    {
+        return $this->context->getValue($key);
     }
 
 }

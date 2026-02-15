@@ -91,6 +91,23 @@ $v->forKey('name')->required()->string();
 $v->forKey('title')->required('Title is required')->string();
 ```
 
+
+### Conditional Required Fields (`requiredIf`)
+
+Use `requiredIf()` to make a field required based on the value of another field.
+
+```php
+// 'state' is required only if 'country' is 'US'
+$v->forKey('country')->required()->string();
+$v->forKey('state')->requiredIf('country', 'US')->string();
+
+// Multiple expected values
+$v->forKey('reason')->requiredIf('status', ['rejected', 'pending'])->string();
+
+// With elseOverwrite: if condition is not met, set to a specific value and skip further rules
+$v->forKey('type')->requiredIf('category', 'special', 'Type is required', 'default-type')->string();
+```
+
 ### Built-in Rules
 
 - `string()`: Checks if value is a string.
@@ -186,6 +203,13 @@ Marks the field as required.
 
 ### `optional(mixed $default = null): static`
 Marks the field as optional. If the field is missing, it will be set to the default value.
+
+### `requiredIf(string $otherKey, mixed $expect, ?string $msg = null, mixed $elseOverwrite = null): static`
+Marks the field as required if the value of `$otherKey` matches `$expect`. 
+- If matched: acts like `required($msg)`.
+- If not matched: 
+    - If `$elseOverwrite` is provided, sets the field to this value and skips further validation.
+    - Otherwise, acts like `optional()`.
 
 ### `isValid(): bool`
 Returns true if there are no validation errors.

@@ -32,13 +32,12 @@ class ValidationContext
         return $this->data[$this->currentKey] ?? null;
     }
 
-    public function hasValue($option = ''): bool
+    public function hasValue(): bool
     {
         $value = $this->data[$this->currentKey] ?? null;
         if ($value !== '' && !is_null($value)) {
             return true;
         }
-        $this->validatedData[$this->currentKey] = $option;
         return false;
     }
 
@@ -78,5 +77,10 @@ class ValidationContext
     public function getValidatedData(): array
     {
         return $this->validatedData;
+    }
+
+    public function getValue(string $key): mixed
+    {
+        return $this->data[$key] ?? null;
     }
 }

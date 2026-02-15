@@ -55,7 +55,7 @@ class OptionalTest extends TestCase
         
         $this->assertTrue($v->isValid());
         $data = $v->getValidatedData();
-        $this->assertEquals(null, $data['age']);
+        $this->assertArrayNotHasKey('age', $data);
     }
 
     public function testWithoutOptional()
@@ -76,6 +76,6 @@ class OptionalTest extends TestCase
         
         $this->assertTrue($v->isValid());
         $data = $v->getValidatedData();
-        $this->assertNull($data['name']);
+        $this->assertArrayNotHasKey('name', $data);
     }
 }
