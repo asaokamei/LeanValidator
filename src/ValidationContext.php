@@ -83,4 +83,9 @@ class ValidationContext
     {
         return $this->data[$key] ?? null;
     }
+
+    public function hasKey(string $key): bool
+    {
+        return array_key_exists($key, $this->data);
+    }
 }

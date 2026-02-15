@@ -217,6 +217,62 @@ class Validator
         return $this->optional();
     }
 
+    /**
+     * $otherKey が存在する場合に required.
+     * それ以外は optional 扱い。
+     */
+    public function requiredWith(
+        string $otherKey,
+        ?string $msg = null,
+        mixed $elseOverwrite = null
+    ): static {
+        if ($this->context->isCurrentError() || $this->context->isSkipped()) {
+            return $this;
+        }
+
+        if ($this->context->hasKey($otherKey)) {
+            return $this->required($msg);
+        }
+
+        $args = func_get_args();
+        $hasElseOverwrite = array_key_exists(2, $args) || array_key_exists('elseOverwrite', $args);
+        if ($hasElseOverwrite) {
+            $this->context->setValidatedData($elseOverwrite);
+            $this->context->setSkipped(true);
+            return $this;
+        }
+
+        return $this->optional();
+    }
+
+    /**
+     * $otherKey が存在しない場合に required.
+     * それ以外は optional 扱い。
+     */
+    public function requiredWithout(
+        string $otherKey,
+        ?string $msg = null,
+        mixed $elseOverwrite = null
+    ): static {
+        if ($this->context->isCurrentError() || $this->context->isSkipped()) {
+            return $this;
+        }
+
+        if (!$this->context->hasKey($otherKey)) {
+            return $this->required($msg);
+        }
+
+        $args = func_get_args();
+        $hasElseOverwrite = array_key_exists(2, $args) || array_key_exists('elseOverwrite', $args);
+        if ($hasElseOverwrite) {
+            $this->context->setValidatedData($elseOverwrite);
+            $this->context->setSkipped(true);
+            return $this;
+        }
+
+        return $this->optional();
+    }
+
     public function optional(mixed $default = null): static
     {
         if ($this->hasValue()) {

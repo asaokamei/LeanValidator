@@ -92,20 +92,39 @@ $v->forKey('title')->required('Title is required')->string();
 ```
 
 
-### Conditional Required Fields (`requiredIf`)
+### Conditional Required Fields (`requiredIf`, `requiredWith`, `requiredWithout`)
 
-Use `requiredIf()` to make a field required based on the value of another field.
+Use these methods to make a field required based on another field.
+
+#### `requiredIf(string $otherKey, mixed $expect, ?string $msg = null, mixed $elseOverwrite = null)`
+Required if `$otherKey`'s value matches `$expect`.
 
 ```php
 // 'state' is required only if 'country' is 'US'
-$v->forKey('country')->required()->string();
 $v->forKey('state')->requiredIf('country', 'US')->string();
+```
 
-// Multiple expected values
-$v->forKey('reason')->requiredIf('status', ['rejected', 'pending'])->string();
+#### `requiredWith(string $otherKey, ?string $msg = null, mixed $elseOverwrite = null)`
+Required if `$otherKey` exists in the input data (even if it's null).
 
-// With elseOverwrite: if condition is not met, set to a specific value and skip further rules
-$v->forKey('type')->requiredIf('category', 'special', 'Type is required', 'default-type')->string();
+```php
+// 'confirm_password' is required if 'password' exists
+$v->forKey('confirm_password')->requiredWith('password')->string();
+```
+
+#### `requiredWithout(string $otherKey, ?string $msg = null, mixed $elseOverwrite = null)`
+Required if `$otherKey` does not exist in the input data.
+
+```php
+// 'guest_email' is required if 'user_id' is missing
+$v->forKey('guest_email')->requiredWithout('user_id')->email();
+```
+
+#### `elseOverwrite`
+For all these methods, if the condition is not met, you can provide an `elseOverwrite` value. The field will be set to this value and further validation rules in the chain will be skipped.
+
+```php
+$v->forKey('type')->requiredIf('category', 'special', 'Required', 'default-type')->string();
 ```
 
 ### Built-in Rules
@@ -210,6 +229,16 @@ Marks the field as required if the value of `$otherKey` matches `$expect`.
 - If not matched: 
     - If `$elseOverwrite` is provided, sets the field to this value and skips further validation.
     - Otherwise, acts like `optional()`.
+
+### `requiredWith(string $otherKey, ?string $msg = null, mixed $elseOverwrite = null): static`
+Marks the field as required if `$otherKey` exists.
+- If exists: acts like `required($msg)`.
+- Otherwise: acts like `optional()` or overwrites if `$elseOverwrite` is provided.
+
+### `requiredWithout(string $otherKey, ?string $msg = null, mixed $elseOverwrite = null): static`
+Marks the field as required if `$otherKey` does not exist.
+- If not exists: acts like `required($msg)`.
+- Otherwise: acts like `optional()` or overwrites if `$elseOverwrite` is provided.
 
 ### `isValid(): bool`
 Returns true if there are no validation errors.
