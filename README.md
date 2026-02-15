@@ -104,6 +104,14 @@ Required if `$otherKey`'s value matches `$expect`.
 $v->forKey('state')->requiredIf('country', 'US')->string();
 ```
 
+#### `requiredUnless(string $otherKey, mixed $expect, ?string $msg = null, mixed $elseOverwrite = null)`
+Required unless `$otherKey`'s value matches `$expect`.
+
+```php
+// 'state' is required only if 'country' is 'US'
+$v->forKey('state')->requiredUnless('country', 'US')->string();
+```
+
 #### `requiredWith(string $otherKey, ?string $msg = null, mixed $elseOverwrite = null)`
 Required if `$otherKey` exists in the input data (even if it's null).
 
