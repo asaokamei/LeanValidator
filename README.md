@@ -120,6 +120,16 @@ Required if `$otherKey` does not exist in the input data.
 $v->forKey('guest_email')->requiredWithout('user_id')->email();
 ```
 
+#### `requiredWhen(callable $call, ?string $msg = null, mixed $elseOverwrite = null)`
+Required if the callback `$call($data)` returns true. The `$data` contains all input data.
+
+```php
+// 'name' is required only if 'type' is 'personal'
+$v->forKey('name')->requiredWhen(function($data) {
+    return ($data['type'] ?? '') === 'personal';
+})->string();
+```
+
 #### `elseOverwrite`
 For all these methods, if the condition is not met, you can provide an `elseOverwrite` value. The field will be set to this value and further validation rules in the chain will be skipped.
 
@@ -238,6 +248,11 @@ Marks the field as required if `$otherKey` exists.
 ### `requiredWithout(string $otherKey, ?string $msg = null, mixed $elseOverwrite = null): static`
 Marks the field as required if `$otherKey` does not exist.
 - If not exists: acts like `required($msg)`.
+- Otherwise: acts like `optional()` or overwrites if `$elseOverwrite` is provided.
+
+### `requiredWhen(callable $call, ?string $msg = null, mixed $elseOverwrite = null): static`
+Marks the field as required if `$call($data)` returns true.
+- If true: acts like `required($msg)`.
 - Otherwise: acts like `optional()` or overwrites if `$elseOverwrite` is provided.
 
 ### `isValid(): bool`

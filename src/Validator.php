@@ -273,6 +273,34 @@ class Validator
         return $this->optional();
     }
 
+    /**
+     * コールバックが true を返した場合に required.
+     * それ以外は optional 扱い。
+     */
+    public function requiredWhen(
+        callable $call,
+        ?string $msg = null,
+        mixed $elseOverwrite = null
+    ): static {
+        if ($this->context->isCurrentError() || $this->context->isSkipped()) {
+            return $this;
+        }
+
+        if ($call($this->context->getData())) {
+            return $this->required($msg);
+        }
+
+        $args = func_get_args();
+        $hasElseOverwrite = array_key_exists(2, $args) || array_key_exists('elseOverwrite', $args);
+        if ($hasElseOverwrite) {
+            $this->context->setValidatedData($elseOverwrite);
+            $this->context->setSkipped(true);
+            return $this;
+        }
+
+        return $this->optional();
+    }
+
     public function optional(mixed $default = null): static
     {
         if ($this->hasValue()) {
