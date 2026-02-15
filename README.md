@@ -67,39 +67,45 @@ if ($v->isValid()) {
 Use `message()` to set a custom message for the **next** rule in the chain.
 
 ```php
-$v->forKey('age', 'Please enter your age')
+$v->forKey('age', 'Please enter your age (must be above 18)')
   ->required()
   ->message('Age must be a number')->int()
   ->message('You must be at least 18')->int(18);
 ```
 
-### Nullable Fields
-
-TODO: streamline this feature!!!
+### Optional Fields
 
 ```php
-if ($v->hasValue('extra_info')) {
-  $v->forKey('extra_info')->string();
-}
+$v->forKey('extra_info')->optional()->string();
+
+// With default value
+$v->forKey('status')->optional('active')->string();
 ```
 
-### Quick Entry Points
-
-TODO: this feature is not implemented yet!!!
-
-`required()` and `arrayCount()` can be used as entry points without `forKey()`.
+### Required Fields
 
 ```php
-$v->required('name', 'Name is required')->string();
-$v->arrayCount('tags', 1, 5, 'Select 1 to 5 tags')->arrayApply('string');
+$v->forKey('name')->required()->string();
+
+// With a custom message
+$v->forKey('title')->required('Title is required')->string();
 ```
 
 ### Built-in Rules
 
 - `string()`: Checks if value is a string.
 - `int(?int $min, ?int $max)`: Checks if value is an integer and within range.
+- `float()`: Validates if the value is a float.
 - `email()`: Validates email format.
+- `url()`: Validates URL format.
 - `regex(string $pattern)`: Validates against a regular expression.
+- `alnum()`: Validates alphanumeric characters.
+- `alpha()`: Validates alphabetic characters.
+- `numeric()`: Validates numeric characters.
+- `in(array $choices)`: Validates if the value is within the given choices.
+- `contains(string $needle)`: Validates if the value contains the needle.
+- `equalTo(mixed $expect)`: Validates if the value is equal to the expected value.
+- `length(?int $min, ?int $max)`: Checks the length of a string.
 - `filterVar(int $filter)`: Uses PHP's `filter_var`.
 
 ## Advanced Validation
@@ -112,6 +118,14 @@ Use `arrayApply()` to apply a rule to every element in an array.
 $v->forKey('tags')->arrayApply('string');
 // Or with parameters
 $v->forKey('scores')->arrayApply('int', 0, 100);
+```
+
+### Validating Array Size
+
+Use `arrayCount()` to validate the number of elements in an array.
+
+```php
+$v->forKey('tags')->arrayCount(1, 5, 'Please provide 1 to 5 tags');
 ```
 
 ### Validating Arrays of Objects (Nested Data)
@@ -128,18 +142,22 @@ $data = [
 
 $v = Validator::make($data);
 $v->forKey('users')->forEach(function(Validator $child) {
-    $child->required('name')->string();
-    $child->required('email')->email();
+    $child->forKey('name')->required()->string();
+    $child->forKey('email')->required()->email();
 });
 ```
 
 ### Custom Validators
 
-You can use `apply()` to use any callable or closure as a validation rule.
+You can use `apply()` to use any callable, closure, or rule class as a validation rule.
 
 ```php
-$v->forKey('username')->apply(function($value) {
-    return !in_array($value, ['admin', 'root']);
+// Using a closure
+$v->forKey('username')->apply(fn($value) => !in_array($value, ['admin', 'root']));
+
+// Using a closure that operates on the validator instance
+$v->forKey('zip')->apply(function() {
+    $this->regex('/^\d{3}-\d{4}$/');
 });
 
 // Using external functions
@@ -147,6 +165,12 @@ $v->forKey('count')->apply('is_numeric');
 
 // Using first-class callables
 $v->forKey('price')->apply($myValidator->checkPrice(...));
+
+// Using external rule classes (instantiated automatically)
+$v->forKey('token')->apply(MyCustomRule::class, $options);
+
+// Using invokable objects
+$v->forKey('price')->apply(new MyInvokableRule(), $minPrice);
 ```
 
 ## API Reference
@@ -154,11 +178,20 @@ $v->forKey('price')->apply($myValidator->checkPrice(...));
 ### `Validator::make(array|string|numeric $data): static`
 Creates a validator. If a string or number is passed, it treats it as a single item to be validated.
 
-### `getValidatedData(): array`
-Returns the validated data. Throws `RuntimeException` if validation failed.
+### `forKey(string $key, ?string $errorMsg = null): static`
+Specifies the field to validate. Optionally sets a default error message for any rule in the chain.
+
+### `required(?string $msg = null): static`
+Marks the field as required.
+
+### `optional(mixed $default = null): static`
+Marks the field as optional. If the field is missing, it will be set to the default value.
 
 ### `isValid(): bool`
 Returns true if there are no validation errors.
+
+### `getValidatedData(): array`
+Returns the validated data. Throws `RuntimeException` if validation failed.
 
 ### `getErrorsFlat(): array`
 Returns a flat array of error messages where keys are the field names.
