@@ -62,6 +62,27 @@ if ($v->isValid()) {
 
 ## Rules and Messages
 
+### Default Error Messages
+
+The validator provides two default error messages for common validation rules.
+- `required`: "This field is required."
+- `email`: "Please enter a valid email address."
+
+To override these messages, set `forKey` with a custom message.
+
+```php
+$v->forKey('age', 'Please enter your age (must be above 18)')
+  ->required('You must be at least 18 years old.')
+  ->int(18);
+```
+
+You can change the default messages simply by modifying the messages. 
+
+```php
+$v->defaultMessage = 'Invalid input!';
+$v->defaultMessageRequired = 'Cannot skip this field!';
+```
+
 ### Custom Error Messages
 
 Use `message()` to set a custom message for the **next** rule in the chain.

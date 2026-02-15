@@ -29,13 +29,15 @@ class ValidatorTest extends TestCase
 
     public function testGetErrorsFlat()
     {
-        $v = Validator::make(['name' => '', 'age' => 'old']);
+        $v = Validator::make(['name' => '', 'age' => 'old', 'other' => '']);
         $v->forKey('name', 'Name is required')->required();
         $v->forKey('age', 'Age must be int')->int();
-        
+        $v->forKey('other')->required();
+
         $flat = $v->getErrorsFlat();
         $this->assertEquals('Name is required', $flat['name']);
         $this->assertEquals('Age must be int', $flat['age']);
+        $this->assertEquals('This field is required.', $flat['other']);
     }
 
     public function testRequired()

@@ -15,7 +15,7 @@ class RequiredIfTest extends TestCase
         $v->forKey('name')->requiredIf('type', 'friend')->string();
 
         $this->assertFalse($v->isValid());
-        $this->assertEquals('Please check the input value.', $v->getMessageBag()->first('name'));
+        $this->assertEquals('This field is required.', $v->getMessageBag()->first('name'));
 
         $v = Validator::make(['type' => 'friend', 'name' => 'John']);
         $v->forKey('type')->string();

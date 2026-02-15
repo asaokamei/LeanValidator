@@ -28,7 +28,9 @@ class Validator
 {
     protected ValidationContext $context;
     protected MessageBag $errors;
-    protected string $errorMessage = '';
+    protected ?string $errorMessage = '';
+    public string $defaultMessage = 'Please check the input value.';
+    public string $defaultMessageRequired = 'This field is required.';
 
     public array $rules = [
         'email' => ['filterVar', [FILTER_VALIDATE_EMAIL]],
@@ -166,12 +168,14 @@ class Validator
     public function forKey(string $key, ?string $errorMsg = null): static
     {
         $this->context->setKey($key);
-        $this->errorMessage = $errorMsg ?? 'Please check the input value.';
+        $this->errorMessage = $errorMsg;
         return $this;
     }
 
     public function required(?string $msg = null): static
     {
+        $msg = $msg ?? $this->errorMessage;
+        $msg = $msg ?? $this->defaultMessageRequired;
         if (!$this->hasValue()) $this->setError($msg);
         return $this;
     }
@@ -384,6 +388,7 @@ class Validator
     {
         $currentKey = $this->context->getCurrentKey();
         $errorMsg = $msg ?? $this->errorMessage;
+        $errorMsg = $errorMsg ?? $this->defaultMessage;
         if ($currentKey === '__current_item__') {
             $this->errors->add($errorMsg);
         } else {
