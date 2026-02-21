@@ -65,7 +65,7 @@ class OptionalTest extends TestCase
         $v->forKey('age')->int();
 
         $this->assertFalse($v->isValid());
-        $bag = $v->getMessageBag();
+        $bag = $v->getErrors();
         $this->assertEquals('Please check the input value.', $bag->first('age'));
     }
 

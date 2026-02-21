@@ -15,7 +15,7 @@ class RequiredIfTest extends TestCase
         $v->forKey('name')->requiredIf('type', 'friend')->string();
 
         $this->assertFalse($v->isValid());
-        $this->assertEquals('This field is required.', $v->getMessageBag()->first('name'));
+        $this->assertEquals('This field is required.', $v->getErrors()->first('name'));
 
         $v = Validator::make(['type' => 'friend', 'name' => 'John']);
         $v->forKey('type')->string();
@@ -69,6 +69,6 @@ class RequiredIfTest extends TestCase
         // If already error or skipped, requiredIf should do nothing.
         $v = Validator::make(['type' => 'friend', 'name' => '']);
         $v->forKey('name')->message('previous error')->required()->requiredIf('type', 'friend');
-        $this->assertEquals('previous error', $v->getMessageBag()->first('name'));
+        $this->assertEquals('previous error', $v->getErrors()->first('name'));
     }
 }

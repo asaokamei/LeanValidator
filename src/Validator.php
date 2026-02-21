@@ -196,29 +196,13 @@ class Validator
         ?string $msg = null,
         mixed $elseOverwrite = null
     ): static {
-        if ($this->context->isCurrentError() || $this->context->isSkipped()) {
-            return $this;
-        }
-
-        $otherValue = $this->getValueAtKey($otherKey);
-
-        $matched = is_array($expect)
-            ? in_array($otherValue, $expect, true)
-            : ($otherValue === $expect);
-
-        if ($matched) {
-            return $this->required($msg);
-        }
-
-        $args = func_get_args();
-        $hasElseOverwrite = array_key_exists(3, $args) || array_key_exists('elseOverwrite', $args);
-        if ($hasElseOverwrite) {
-            $this->context->setValidatedData($elseOverwrite);
-            $this->context->setSkipped(true);
-            return $this;
-        }
-
-        return $this->optional();
+        $call = function () use ($otherKey, $expect) {
+            $otherValue = $this->getValueAtKey($otherKey);
+            return is_array($expect)
+                ? in_array($otherValue, $expect, true)
+                : ($otherValue === $expect);
+        };
+        return $this->requiredWhen($call, $msg, ...array_slice(func_get_args(), 3));
     }
 
     /**
@@ -233,29 +217,14 @@ class Validator
         ?string $msg = null,
         mixed $elseOverwrite = null
     ): static {
-        if ($this->context->isCurrentError() || $this->context->isSkipped()) {
-            return $this;
-        }
-
-        $otherValue = $this->getValueAtKey($otherKey);
-
-        $matched = is_array($expect)
-            ? in_array($otherValue, $expect, true)
-            : ($otherValue === $expect);
-
-        if (!$matched) {
-            return $this->required($msg);
-        }
-
-        $args = func_get_args();
-        $hasElseOverwrite = array_key_exists(3, $args) || array_key_exists('elseOverwrite', $args);
-        if ($hasElseOverwrite) {
-            $this->context->setValidatedData($elseOverwrite);
-            $this->context->setSkipped(true);
-            return $this;
-        }
-
-        return $this->optional();
+        $call = function () use ($otherKey, $expect) {
+            $otherValue = $this->getValueAtKey($otherKey);
+            $matched = is_array($expect)
+                ? in_array($otherValue, $expect, true)
+                : ($otherValue === $expect);
+            return !$matched;
+        };
+        return $this->requiredWhen($call, $msg, ...array_slice(func_get_args(), 3));
     }
 
     /**
@@ -267,23 +236,10 @@ class Validator
         ?string $msg = null,
         mixed $elseOverwrite = null
     ): static {
-        if ($this->context->isCurrentError() || $this->context->isSkipped()) {
-            return $this;
-        }
-
-        if ($this->context->hasKey($otherKey)) {
-            return $this->required($msg);
-        }
-
-        $args = func_get_args();
-        $hasElseOverwrite = array_key_exists(2, $args) || array_key_exists('elseOverwrite', $args);
-        if ($hasElseOverwrite) {
-            $this->context->setValidatedData($elseOverwrite);
-            $this->context->setSkipped(true);
-            return $this;
-        }
-
-        return $this->optional();
+        $call = function () use ($otherKey) {
+            return $this->context->hasKey($otherKey);
+        };
+        return $this->requiredWhen($call, $msg, ...array_slice(func_get_args(), 2));
     }
 
     /**
@@ -295,23 +251,10 @@ class Validator
         ?string $msg = null,
         mixed $elseOverwrite = null
     ): static {
-        if ($this->context->isCurrentError() || $this->context->isSkipped()) {
-            return $this;
-        }
-
-        if (!$this->context->hasKey($otherKey)) {
-            return $this->required($msg);
-        }
-
-        $args = func_get_args();
-        $hasElseOverwrite = array_key_exists(2, $args) || array_key_exists('elseOverwrite', $args);
-        if ($hasElseOverwrite) {
-            $this->context->setValidatedData($elseOverwrite);
-            $this->context->setSkipped(true);
-            return $this;
-        }
-
-        return $this->optional();
+        $call = function () use ($otherKey) {
+            return !$this->context->hasKey($otherKey);
+        };
+        return $this->requiredWhen($call, $msg, ...array_slice(func_get_args(), 2));
     }
 
     /**
@@ -429,11 +372,6 @@ class Validator
         return array_map(function ($messages) {
             return $messages[0] ?? '';
         }, $this->errors->toArray());
-    }
-
-    public function getMessageBag(): MessageBag
-    {
-        return $this->errors;
     }
 
     public function isValid(): bool
