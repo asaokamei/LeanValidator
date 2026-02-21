@@ -553,6 +553,42 @@ class Validator
     }
 
     /**
+     * ネストした配列を子 Validator で検証します（ドット記法でフィールド指定しない方針用）。
+     *
+     * 例:
+     * $v->forKey('address')->nest(function(Validator $child) {
+     *     $child->forKey('post_code')->required()->regex('/^\d{3}-\d{4}$/');
+     * });
+     *
+     * - current value が配列でなければエラー
+     * - 子のエラーは "address.post_code" のように currentKey 配下へマージ
+     * - validatedData は currentKey => 子の validatedData（ホワイトリスト）を保存
+     */
+    public function nest(callable $callback, ?string $msg = null): static
+    {
+        if ($this->context->isCurrentError() || $this->context->isSkipped()) {
+            return $this;
+        }
+
+        $value = $this->getCurrentValue();
+        if (!is_array($value)) {
+            $msg = $msg ?? $this->errorMessage ?? $this->defaultMessage;
+            return $this->setError($msg);
+        }
+
+        $child = static::make($value);
+        $callback($child);
+
+        if (!$child->isValid()) {
+            $this->setErrors($child->getErrors()->toArray());
+            return $this;
+        }
+
+        $this->context->setValidatedData($child->getValidatedData());
+        return $this;
+    }
+
+    /**
      * example:
      * $this->forEach(function(Validator $child) {
      *     $child->forKey('name', 'Please check the name.')->required()->string();

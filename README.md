@@ -203,6 +203,28 @@ Use `arrayCount()` to validate the number of elements in an array.
 $v->forKey('tags')->arrayCount(1, 5, 'Please provide 1 to 5 tags');
 ```
 
+### Validating Nested Objects (Associative Arrays)
+
+Use `nest()` to validate a nested associative array without using dot-notation in `forKey`.
+Only the validated fields will be included in `getValidatedData()` (whitelist).
+
+```php
+$data = ['address' => [
+    'post_code' => '123-1234', 
+    'town' => 'TOKYO', 
+    'city' => 'Meguro',
+]];
+$v = Validator::make($data);
+
+$v->forKey('address')->required()->nest(function (Validator $child) {
+    $child->forKey('post_code')->required()->regex('/^\d{3}-\d{4}$/');
+    $child->forKey('town')->required()->string();
+    $child->forKey('city')->required()->string();
+});
+if ($v->isValid()) {
+    $validated = $v->getValidatedData();
+} // ['address' => ['post_code' => '123-1234', 'town' => 'TOKYO', 'city' => 'Meguro']] }
+```
 ### Validating Arrays of Objects (Nested Data)
 
 Use `forEach()` to validate complex nested structures.
