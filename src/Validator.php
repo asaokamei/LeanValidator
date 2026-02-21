@@ -26,7 +26,11 @@ use RuntimeException;
  */
 class Validator
 {
-    protected ValidationContext $context;
+    protected array $data = [];
+    protected array $validatedData = [];
+    protected string $currentKey = '';
+    protected bool $isError = false;
+    protected bool $isSkipped = false;
     protected MessageBag $errors;
     protected ?string $errorMessage = '';
     public string $defaultMessage = 'Please check the input value.';
@@ -43,7 +47,7 @@ class Validator
 
     public function __construct(array $data)
     {
-        $this->context = new ValidationContext($data);
+        $this->data = $data;
         $this->errors = new MessageBag();
     }
 
@@ -53,7 +57,7 @@ class Validator
             return new static($data);
         } elseif (is_string($data) || is_numeric($data)) {
             $self = new static(['__current_item__' => $data]);
-            $self->context->setKey('__current_item__');
+            $self->currentKey = '__current_item__';
             return $self;
         }
         return new static([]);
@@ -104,16 +108,18 @@ class Validator
      */
     public function apply(mixed $validator, mixed ...$args): static
     {
-        if ($this->context->isCurrentError() || $this->context->isSkipped()) {
+        if ($this->isError || $this->isSkipped) {
             return $this;
         }
 
         $value = $this->getCurrentValue();
         $endApply = function ($result) use ($value) {
-            if ($result === false || $this->context->isCurrentError()) {
+            if ($result === false || $this->isError) {
                 $this->setError();
             } else {
-                $this->context->setValidatedData($value);
+                if (!$this->isSkipped) {
+                    $this->validatedData[$this->currentKey] = $value;
+                }
             }
         };
 
@@ -131,11 +137,18 @@ class Validator
             $reflection = new ReflectionFunction($validator);
             $methodName = $reflection->getName();
             if ($methodName !== '{closure}') {
-                if (method_exists($this, $methodName)) {
+                if (isset($this->rules[$methodName])) {
                     return $this->apply($methodName, ...$args);
                 }
+                if (method_exists($this, $methodName)) {
+                    $result = $this->$methodName(...$args);
+                    $endApply($result);
+                    return $this;
+                }
                 if (method_exists($this, '_' . $methodName)) {
-                    return $this->apply($methodName, ...$args);
+                    $result = $this->{'_' . $methodName}(...$args);
+                    $endApply($result);
+                    return $this;
                 }
             }
             if ($reflection->getNumberOfParameters() === 0) {
@@ -167,7 +180,9 @@ class Validator
 
     public function forKey(string $key, ?string $errorMsg = null): static
     {
-        $this->context->setKey($key);
+        $this->currentKey = $key;
+        $this->isError = false;
+        $this->isSkipped = false;
         $this->errorMessage = $errorMsg;
         return $this;
     }
@@ -197,7 +212,7 @@ class Validator
         mixed $elseOverwrite = null
     ): static {
         $call = function () use ($otherKey, $expect) {
-            $otherValue = $this->getValueAtKey($otherKey);
+            $otherValue = $this->data[$otherKey] ?? null;
             return is_array($expect)
                 ? in_array($otherValue, $expect, true)
                 : ($otherValue === $expect);
@@ -218,7 +233,7 @@ class Validator
         mixed $elseOverwrite = null
     ): static {
         $call = function () use ($otherKey, $expect) {
-            $otherValue = $this->getValueAtKey($otherKey);
+            $otherValue = $this->data[$otherKey] ?? null;
             $matched = is_array($expect)
                 ? in_array($otherValue, $expect, true)
                 : ($otherValue === $expect);
@@ -237,7 +252,7 @@ class Validator
         mixed $elseOverwrite = null
     ): static {
         $call = function () use ($otherKey) {
-            return $this->context->hasKey($otherKey);
+            return array_key_exists($otherKey, $this->data);
         };
         return $this->requiredWhen($call, $msg, ...array_slice(func_get_args(), 2));
     }
@@ -252,7 +267,7 @@ class Validator
         mixed $elseOverwrite = null
     ): static {
         $call = function () use ($otherKey) {
-            return !$this->context->hasKey($otherKey);
+            return !array_key_exists($otherKey, $this->data);
         };
         return $this->requiredWhen($call, $msg, ...array_slice(func_get_args(), 2));
     }
@@ -266,19 +281,18 @@ class Validator
         ?string $msg = null,
         mixed $elseOverwrite = null
     ): static {
-        if ($this->context->isCurrentError() || $this->context->isSkipped()) {
+        if ($this->isError || $this->isSkipped) {
             return $this;
         }
 
-        if ($call($this->context->getData())) {
+        if ($call($this->data)) {
             return $this->required($msg);
         }
 
         $args = func_get_args();
-        $hasElseOverwrite = array_key_exists(2, $args) || array_key_exists('elseOverwrite', $args);
-        if ($hasElseOverwrite) {
-            $this->context->setValidatedData($elseOverwrite);
-            $this->context->setSkipped(true);
+        if (array_key_exists(2, $args) || array_key_exists('elseOverwrite', $args)) {
+            $this->validatedData[$this->currentKey] = $elseOverwrite;
+            $this->isSkipped = true;
             return $this;
         }
 
@@ -292,13 +306,11 @@ class Validator
         }
 
         $args = func_get_args();
-        $hasDefault = array_key_exists(0, $args) || array_key_exists('default', $args);
-
-        if ($hasDefault) {
-            $this->context->setValidatedData($default);
+        if (array_key_exists(0, $args) || array_key_exists('default', $args)) {
+            $this->validatedData[$this->currentKey] = $default;
         }
 
-        $this->context->setSkipped(true);
+        $this->isSkipped = true;
         return $this;
     }
 
@@ -319,47 +331,46 @@ class Validator
 
     protected function getCurrentValue(): mixed
     {
-        return $this->context->getCurrentValue();
+        return $this->data[$this->currentKey] ?? null;
     }
 
     public function hasValue(): bool
     {
-        return $this->context->hasValue();
+        $value = $this->data[$this->currentKey] ?? null;
+        return $value !== '' && !is_null($value);
     }
 
     protected function setError(string $msg = null): static
     {
-        $currentKey = $this->context->getCurrentKey();
         $errorMsg = $msg ?? $this->errorMessage;
         $errorMsg = $errorMsg ?? $this->defaultMessage;
-        if ($currentKey === '__current_item__') {
+        if ($this->currentKey === '__current_item__') {
             $this->errors->add($errorMsg);
         } else {
-            $this->errors->add($errorMsg, $currentKey);
+            $this->errors->add($errorMsg, $this->currentKey);
         }
-        $this->context->setError();
+        $this->isError = true;
         return $this;
     }
 
     protected function setErrors(array $errors, string ...$path): static
     {
-        $currentKey = $this->context->getCurrentKey();
-        if (empty($path) && $currentKey !== '' && $currentKey !== '__current_item__') {
-            $path = [$currentKey];
+        if (empty($path) && $this->currentKey !== '' && $this->currentKey !== '__current_item__') {
+            $path = [$this->currentKey];
         }
         $this->errors->setErrors($errors, ...$path);
-        $this->context->setError();
+        $this->isError = true;
         return $this;
     }
 
     public function isCurrentError(): bool
     {
-        return $this->context->isCurrentError();
+        return $this->isError;
     }
 
     public function isCurrentOK(): bool
     {
-        return $this->context->isCurrentOK();
+        return !$this->isError;
     }
 
     public function getErrors(): MessageBag
@@ -384,7 +395,7 @@ class Validator
         if (!$this->isValid()) {
             throw new RuntimeException('Validation failed.');
         }
-        return $this->context->getValidatedData();
+        return $this->validatedData;
     }
 
     protected function _string(): bool
@@ -474,7 +485,7 @@ class Validator
      */
     public function arrayApply(mixed $validator, mixed ...$args): static
     {
-        if ($this->context->isCurrentError()) return $this;
+        if ($this->isError) return $this;
         $value = $this->getCurrentValue();
         if (!is_array($value)) return $this->setError();
 
@@ -485,7 +496,7 @@ class Validator
         if (!$child->isValid()) {
             $this->setErrors($child->getErrors()->toArray());
         } else {
-            $this->context->setValidatedData($child->getValidatedData());
+            $this->validatedData[$this->currentKey] = $child->getValidatedData();
         }
         return $this;
     }
@@ -504,7 +515,7 @@ class Validator
      */
     public function nest(callable $callback, ?string $msg = null): static
     {
-        if ($this->context->isCurrentError() || $this->context->isSkipped()) {
+        if ($this->isError || $this->isSkipped) {
             return $this;
         }
 
@@ -522,7 +533,7 @@ class Validator
             return $this;
         }
 
-        $this->context->setValidatedData($child->getValidatedData());
+        $this->validatedData[$this->currentKey] = $child->getValidatedData();
         return $this;
     }
 
@@ -537,7 +548,7 @@ class Validator
      */
     public function forEach(callable $callback): static
     {
-        if ($this->context->isCurrentError()) return $this;
+        if ($this->isError) return $this;
         $value = $this->getCurrentValue();
         if (!is_array($value)) return $this->setError();
 
@@ -553,21 +564,21 @@ class Validator
                 $childValidator->setErrors($child->getErrors()->toArray(), (string)$key);
             } else {
                 $childValidator->forKey((string)$key);
-                $childValidator->context->setValidatedData($child->getValidatedData());
+                $childValidator->validatedData[$childValidator->currentKey] = $child->getValidatedData();
             }
         }
 
         if (!$childValidator->isValid()) {
             $this->setErrors($childValidator->getErrors()->toArray());
         } else {
-            $this->context->setValidatedData($childValidator->getValidatedData());
+            $this->validatedData[$this->currentKey] = $childValidator->getValidatedData();
         }
         return $this;
     }
 
     public function getValueAtKey(string $key): mixed
     {
-        return $this->context->getValue($key);
+        return $this->data[$key] ?? null;
     }
 
 }
