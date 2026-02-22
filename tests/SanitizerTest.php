@@ -215,4 +215,21 @@ class SanitizerTest extends TestCase
 
         $this->assertSame('text-tested', $cleaned['text']);
     }
+
+    public function testDirectChildWildcardDoesNotApplyToGrandchildren()
+    {
+        $s = $this->getSanitizer();
+        $s->skipTrim('user.*'); // user直下だけ trim をスキップ（utf8のみ）
+
+        $data = [
+            'user' => [
+                'name' => '  John  ',                 // 直下 -> trimされない
+                'address' => ['city' => ' Tokyo '],   // 孫 -> trimされる
+            ],
+        ];
+        $cleaned = $s->clean($data);
+
+        $this->assertSame('  John  ', $cleaned['user']['name']);
+        $this->assertSame('Tokyo', $cleaned['user']['address']['city']);
+    }
 }

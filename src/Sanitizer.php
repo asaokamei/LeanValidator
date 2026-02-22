@@ -122,15 +122,27 @@ class Sanitizer
 
     private function findRules(string $fullKey, array $schema): array
     {
+        // 1) 完全一致
         if (isset($schema[$fullKey])) return $schema[$fullKey];
 
-        // ワイルドカード (*) 対応
+        // 2) ワイルドカード一致（例: items.*.code）
         foreach ($schema as $pattern => $rules) {
             if (str_contains($pattern, '*')) {
                 $regex = '/^' . str_replace(['.', '*'], ['\\.', '[^.]+'], $pattern) . '$/';
                 if (preg_match($regex, $fullKey)) return $rules;
             }
         }
+
+        // 3) 直下の子だけ：親キー + '.*' を見る
+        // 例: fullKey='user.tel' -> 親は 'user' なので 'user.*' を参照
+        $pos = strrpos($fullKey, '.');
+        if ($pos !== false) {
+            $parentKey = substr($fullKey, 0, $pos);
+            $directChildPattern = $parentKey . '.*';
+            if (isset($schema[$directChildPattern])) return $schema[$directChildPattern];
+        }
+
+        // 4) デフォルト（全フィールド utf8 + trim のままでOK）
         return $this->globalDefault;
     }
 }
