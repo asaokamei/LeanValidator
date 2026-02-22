@@ -337,7 +337,7 @@ class Validator
 
     public function hasValue(): bool
     {
-        $value = $this->data[$this->currentKey] ?? null;
+        $value = $this->getCurrentValue();
         return $value !== '' && !is_null($value);
     }
 

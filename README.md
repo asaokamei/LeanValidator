@@ -10,6 +10,13 @@ An AI-friendly and simple validator for PHP.
 - **Flexible Rules**: Use built-in rules, closures, or any PHP callable.
 - **AI-Friendly**: Simple and consistent API that is easy for AI to understand and generate.
 
+### Sanitizer:
+
+This package also provides a sanitization utility that can be used to clean and transform input data.
+
+- **Sanitization**: Automatic UTF-8 conversion and trimming of strings. Supports custom rules and nested data using dot-notation and wildcards.
+
+
 ## Installation
 
 Use composer to install the package.
@@ -314,3 +321,91 @@ Returns the validated data. Throws `RuntimeException` if validation failed.
 
 ### `getErrorsFlat(): array`
 Returns a flat array of error messages where keys are the field names.
+
+
+## Sanitizer Features
+
+The `Sanitizer` class provides various methods to clean and transform input data.
+
+### Default Sanitization
+
+- **UTF-8 Conversion**: Ensures strings are valid UTF-8.
+- **Trimming**: Removes surrounding whitespace using Unicode-aware regex.
+
+### Built-in Rules
+
+Use these methods to apply specific transformations:
+
+- `toUtf8(...$fields)`: Ensures valid UTF-8.
+- `toTrim(...$fields)`: Trims whitespace.
+- `toDigits(...$fields)`: Removes all non-digit characters.
+- `toLower(...$fields)`: Converts to lowercase.
+- `toUpper(...$fields)`: Converts to uppercase.
+- `toKana(...$fields)`: Converts to Zenkaku-Kana (needs `mbstring`).
+- `toHankaku(...$fields)`: Converts to Hankaku-Kana (needs `mbstring`).
+- `toZenkaku(...$fields)`: Converts to Zenkaku-Kana/Alphanumeric (needs `mbstring`).
+
+### Skipping Sanitization
+
+- `skip(...$fields)`: Skips all sanitization (useful for passwords).
+- `skipTrim(...$fields)`: Skips only the trimming process.
+
+### Dot-Notation and Wildcards
+
+You can target nested data using dot-notation and wildcards.
+
+```php
+$s->toDigits('user.tel');           // Target 'tel' inside 'user'
+$s->toDigits('items.*.code');       // Target 'code' in all elements of 'items'
+$s->skipTrim('user.*');             // Skip trim for all direct children of 'user'
+```
+
+### Adding Custom Rules
+
+You can add your own sanitization rules using `addRule()`.
+
+```php
+$s = new Sanitizer();
+$s->addRule('stars', function($value) {
+    return str_repeat('*', strlen($value));
+});
+
+$s->apply('stars', 'password');
+```
+
+### Data Sanitization
+
+By default, the `Validator` can sanitize input data using the `Sanitizer` class.
+To apply sanitization, you must explicitly call the `sanitize()` method before validation.
+
+```php
+use Wscore\LeanValidator\Sanitizer;
+
+$data = [
+    'name' => '  John Doe  ',
+    'tel' => '03-1234-5678',
+    'password' => '  secret  ',
+    'items' => [
+        ['code' => ' A-123 '],
+        ['code' => ' B-456 '],
+    ]
+];
+
+$s = new Sanitizer();
+
+// Configure sanitization
+$s->skip('password')           // Do not trim or clean password
+    ->toDigits('tel')             // Remove non-digit characters
+    ->toDigits('items.*.code');   // Use dot-notation and wildcards for nested data
+// Apply sanitization
+$cleanData = $s->clean($data);
+// $cleanData['name'] => 'John Doe'
+// $cleanData['tel'] => '0312345678'
+// $cleanData['password'] => '  secret  '
+// $cleanData['items'][0]['code'] => '123'
+```
+
+By default, the `Sanitizer` converts strings to UTF-8 and trims surrounding whitespace.
+If you don't call `sanitize()`, the validation will be performed on the raw input data.
+
+

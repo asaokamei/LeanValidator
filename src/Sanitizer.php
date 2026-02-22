@@ -94,7 +94,7 @@ class Sanitizer
     {
         $result = [];
         foreach ($data as $key => $value) {
-            $fullKey = ($prefix === '') ? $key : $prefix . '.' . $key;
+            $fullKey = ($prefix === '') ? (string)$key : $prefix . '.' . $key;
 
             if (is_array($value)) {
                 $result[$key] = $this->runRecursive($value, $schema, $fullKey);
