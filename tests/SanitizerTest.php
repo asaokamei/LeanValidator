@@ -95,6 +95,32 @@ class SanitizerTest extends TestCase
         $this->assertEquals('ワールド', $cleaned['name']);
     }
 
+    public function testToHankaku()
+    {
+        $s = $this->getSanitizer();
+        $s->toHankaku('code');
+        
+        $data = [
+            'code' => 'ＡＢＣ　１２３　アイウ', // 全角英数・スペース・カナ
+        ];
+        $cleaned = $s->clean($data);
+        
+        $this->assertEquals('ABC 123 ｱｲｳ', $cleaned['code']);
+    }
+
+    public function testToZenkaku()
+    {
+        $s = $this->getSanitizer();
+        $s->toZenkaku('memo');
+        
+        $data = [
+            'memo' => 'ABC 123 ｱｲｳ', // 半角英数・スペース・カナ
+        ];
+        $cleaned = $s->clean($data);
+        
+        $this->assertEquals('ＡＢＣ　１２３　アイウ', $cleaned['memo']);
+    }
+
     public function testRecursiveClean()
     {
         $s = $this->getSanitizer();
@@ -129,6 +155,37 @@ class SanitizerTest extends TestCase
         $this->assertEquals('123', $cleaned['items'][0]['code']);
         $this->assertEquals('Item 2', $cleaned['items'][1]['name']);
         $this->assertEquals('456', $cleaned['items'][1]['code']);
+    }
+
+    public function testToUtf8()
+    {
+        $s = $this->getSanitizer();
+        $s->toUtf8('name');
+        
+        $invalid_utf8 = "abc" . chr(0x80) . "def";
+        $data = [
+            'name' => $invalid_utf8,
+        ];
+        $cleaned = $s->clean($data);
+        
+        // 文字列の長さが変わっている（置換文字 U+FFFD の UTF-8 バイト列 e3bfbd が挿入されている）ことを確認
+        $this->assertNotEquals($invalid_utf8, $cleaned['name']);
+        $this->assertStringContainsString('abc', $cleaned['name']);
+        $this->assertStringContainsString('def', $cleaned['name']);
+    }
+
+    public function testToUnknownMethodThrowsException()
+    {
+        $this->expectException(\BadMethodCallException::class);
+        $s = $this->getSanitizer();
+        $s->toInvalidMethod('field');
+    }
+
+    public function testNonToMethodThrowsException()
+    {
+        $this->expectException(\BadMethodCallException::class);
+        $s = $this->getSanitizer();
+        $s->invalidMethod('field');
     }
 
     public function testNonStringValue()

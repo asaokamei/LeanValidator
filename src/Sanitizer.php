@@ -3,22 +3,40 @@ declare(strict_types=1);
 
 namespace Wscore\LeanValidator;
 
+/**
+ * @method self toUtf8(...$fields)
+ * @method self toTrim(...$fields)
+ * @method self toDigits(...$fields)
+ * @method self toLower(...$fields)
+ * @method self toUpper(...$fields)
+ * @method self toKana(...$fields)
+ * @method self toHankaku(...$fields)
+ * @method self toZenkaku(...$fields)
+ */
 class Sanitizer
 {
     private array $rules = [];
     private array $schema = [];
-    private array $globalDefault = ['utf8', 'trim'];
+    private array $globalDefault = [];
 
     public function __construct()
     {
         // 1. 基本的な加工ルールの定義
         $this->rules = [
-            'utf8' => fn($v) => \mb_convert_encoding($v, 'UTF-8', 'UTF-8'),
+            'utf8' => fn($v) => (bool) \preg_match('//u', $v),
             'trim' => fn($v) => \preg_replace('/^[\\p{Z}\\s]+|[\\p{Z}\\s]+$/u', '', $v),
-            'kana' => fn($v) => \mb_convert_kana($v, 'KVa', 'UTF-8'), // カナ全角・英数半角
             'digits' => fn($v) => \preg_replace('/[^0-9]/', '', $v),
-            'lower' => fn($v) => \mb_strtolower($v, 'UTF-8'),
+            'lower' => fn($v) => \strtolower($v),
+            'upper' => fn($v) => \strtoupper($v),
         ];
+        $this->globalDefault = ['utf8', 'trim'];
+
+        if (\extension_loaded('mbstring')) {
+            $this->rules['utf8'] = fn($v) => \mb_convert_encoding($v, 'UTF-8', 'UTF-8');
+            $this->rules['kana'] = fn($v) => \mb_convert_kana($v, 'KVa', 'UTF-8');
+            $this->rules['hankaku'] = fn($v) => \mb_convert_kana($v, 'kas', 'UTF-8');
+            $this->rules['zenkaku'] = fn($v) => \mb_convert_kana($v, 'KVAS', 'UTF-8');
+        }
     }
 
     // --- 設定用メソッド (Fluent Interface) ---
@@ -37,24 +55,6 @@ class Sanitizer
         return $this;
     }
 
-    /** 数字のみに変換 */
-    public function toDigits(...$fields): self
-    {
-        return $this->apply('digits', ...$fields);
-    }
-
-    /** 日本語正規化 (半角カナ→全角 / 全角英数→半角) */
-    public function toKana(...$fields): self
-    {
-        return $this->apply('kana', ...$fields);
-    }
-
-    /** 小文字に変換 */
-    public function toLower(...$fields): self
-    {
-        return $this->apply('lower', ...$fields);
-    }
-
     /** 内部的なルール登録用 */
     private function apply(string $rule, ...$fields): self
     {
@@ -63,6 +63,17 @@ class Sanitizer
             $this->schema[$f] = array_unique(array_merge($current, [$rule]));
         }
         return $this;
+    }
+
+    public function __call(string $name, array $arguments): self
+    {
+        if (str_starts_with($name, 'to')) {
+            $rule = strtolower(substr($name, 2));
+            if (isset($this->rules[$rule])) {
+                return $this->apply($rule, ...$arguments);
+            }
+        }
+        throw new \BadMethodCallException("Method {$name} does not exist.");
     }
 
     // --- 実行処理 ---
