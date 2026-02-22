@@ -23,7 +23,7 @@ class Sanitizer
     {
         // 1. 基本的な加工ルールの定義
         $this->rules = [
-            'utf8' => fn($v) => (bool) \preg_match('//u', $v),
+            'utf8' => fn($v) => \preg_match('//u', $v) ? $v : '',
             'trim' => fn($v) => \preg_replace('/^[\\p{Z}\\s]+|[\\p{Z}\\s]+$/u', '', $v),
             'digits' => fn($v) => \preg_replace('/[^0-9]/', '', $v),
             'lower' => fn($v) => \strtolower($v),
