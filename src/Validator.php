@@ -1,4 +1,5 @@
 <?php /** @noinspection PhpUnused */
+declare(strict_types=1);
 
 namespace Wscore\LeanValidator;
 
@@ -412,7 +413,7 @@ class Validator
         return true;
     }
 
-    protected function _filterVar(string $filter): bool
+    protected function _filterVar(int $filter): bool
     {
         $value = $this->getCurrentValue();
         return is_string($value) && filter_var($value, $filter) !== false;
