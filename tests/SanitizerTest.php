@@ -200,4 +200,19 @@ class SanitizerTest extends TestCase
         $this->assertSame(30, $cleaned['age']);
         $this->assertSame(true, $cleaned['is_active']);
     }
+
+    public function testAddRule()
+    {
+        $s = $this->getSanitizer();
+        $data = [
+            'text' => 'text',
+        ];
+        $s->addRule('add_text', function($value) {
+            return $value . '-tested';
+        });
+        $s->apply('add_text', 'text');
+        $cleaned = $s->clean($data);
+
+        $this->assertSame('text-tested', $cleaned['text']);
+    }
 }

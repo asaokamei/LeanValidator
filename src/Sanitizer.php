@@ -56,12 +56,18 @@ class Sanitizer
     }
 
     /** 内部的なルール登録用 */
-    private function apply(string $rule, ...$fields): self
+    public function apply(string $rule, ...$fields): self
     {
         foreach ($fields as $f) {
             $current = $this->schema[$f] ?? $this->globalDefault;
             $this->schema[$f] = array_unique(array_merge($current, [$rule]));
         }
+        return $this;
+    }
+
+    public function addRule(string $ruleName, callable $callback): self
+    {
+        $this->rules[$ruleName] = $callback;
         return $this;
     }
 
