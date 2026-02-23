@@ -277,6 +277,85 @@ $v->forKey('token')->apply(MyCustomRule::class, $options);
 $v->forKey('price')->apply(new MyInvokableRule(), $minPrice);
 ```
 
+### Extending: Custom Rules and IDE Completion
+
+You can add project-specific rules **with IDE code completion** by extending `ValidatorRules` and overriding `createRules()` on your Validator (or ValidatorData) subclass.
+
+1. **Extend ValidatorRules** and add your methods (or register names in `$rules` and use `@method` in the docblock).
+2. **Override `createRules()`** in your Validator subclass to return your rules instance.
+3. **Override `forKey()` with `@return YourValidatorRules`** so that `$v->forKey('x')` is inferred as your class and your custom methods appear in autocomplete.
+
+```php
+use Wscore\LeanValidator\Validator;
+use Wscore\LeanValidator\ValidatorData;
+use Wscore\LeanValidator\ValidatorRules;
+
+class MyValidatorRules extends ValidatorRules
+{
+    public function postCode(): static
+    {
+        return $this->regex('/^\d{3}-\d{4}$/');
+    }
+
+    public function hiragana(): static
+    {
+        return $this->regex('/^[\x{3040}-\x{309F}\s]+$/u');
+    }
+}
+
+class MyValidator extends Validator
+{
+    protected function createRules(): ValidatorRules
+    {
+        return new MyValidatorRules($this);
+    }
+
+    /** @return MyValidatorRules */
+    public function forKey(string $key, ?string $errorMsg = null): ValidatorRules
+    {
+        return parent::forKey($key, $errorMsg);
+    }
+}
+
+// Usage: IDE will suggest postCode() and hiragana()
+$v = MyValidator::make($data);
+$v->forKey('zip')->required()->postCode();
+$v->forKey('name_kana')->required()->hiragana();
+```
+
+### Language- or context-specific Rules (e.g. ValidatorRulesLang)
+
+Use the same mechanism for different rule sets (e.g. per locale or per domain): create a Rules subclass and swap it via `createRules()`.
+
+```php
+class ValidatorRulesJa extends ValidatorRules
+{
+    public function postCode(): static { return $this->regex('/^\d{3}-\d{4}$/'); }
+    public function hiragana(): static { return $this->regex('/^[\x{3040}-\x{309F}\s]+$/u'); }
+}
+
+class ValidatorRulesEn extends ValidatorRules
+{
+    public function zipCode(): static { return $this->regex('/^\d{5}(-\d{4})?$/'); }
+}
+
+// Use a Validator subclass that picks the Rules class (e.g. from locale or config).
+class MyValidatorJa extends Validator
+{
+    protected function createRules(): ValidatorRules
+    {
+        return new ValidatorRulesJa($this);
+    }
+    /** @return ValidatorRulesJa */
+    public function forKey(string $key, ?string $errorMsg = null): ValidatorRules
+    {
+        return parent::forKey($key, $errorMsg);
+    }
+}
+```
+
+Rules added only via `$data->rules['name'] = [...]` (without a method) still work with `apply('name')` and `__call`, but will not show in IDE completion unless you add a corresponding method or `@method` on your Rules subclass.
+
 ## API Reference
 
 ### `Validator::make(array|string|numeric $data): static`
