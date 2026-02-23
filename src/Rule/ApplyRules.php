@@ -49,9 +49,8 @@ trait ApplyRules
         if ($validator instanceof Closure) {
             $reflection = new ReflectionFunction($validator);
             $methodName = $reflection->getName();
-            $rules = $this->data->rules;
             if ($methodName !== '{closure}') {
-                if (isset($rules[$methodName])) {
+                if (isset($this->rules[$methodName])) {
                     return $this->apply($methodName, ...$args);
                 }
                 if (method_exists($this, $methodName)) {

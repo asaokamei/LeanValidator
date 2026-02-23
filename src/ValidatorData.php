@@ -22,17 +22,6 @@ class ValidatorData
     public string $defaultMessage = 'Please check the input value.';
     public string $defaultMessageRequired = 'This field is required.';
 
-    /** @var array<string, array{0: string, 1?: array}> 名前 => [applyの第1引数, 第2引数以降] */
-    public array $rules = [
-        'email' => ['filterVar', [FILTER_VALIDATE_EMAIL]],
-        'float' => ['filterVar', [FILTER_VALIDATE_FLOAT]],
-        'url' => ['filterVar', [FILTER_VALIDATE_URL]],
-        'alnum' => ['regex', ['/^[a-zA-Z0-9]+$/']],
-        'alpha' => ['regex', ['/^[a-zA-Z]+$/']],
-        'numeric' => ['regex', ['/^[0-9]+$/']],
-        'alphaDash' => ['regex', ['/^[a-zA-Z0-9_\-]+$/']],
-    ];
-
     public function __construct(array $data)
     {
         $this->data = $data;

@@ -354,7 +354,7 @@ class MyValidatorJa extends Validator
 }
 ```
 
-Rules added only via `$data->rules['name'] = [...]` (without a method) still work with `apply('name')` and `__call`, but will not show in IDE completion unless you add a corresponding method or `@method` on your Rules subclass.
+Rules added in a ValidatorRules subclass by merging into `$this->rules` in the constructor (e.g. `$this->rules = array_merge($this->rules, [ 'ip' => ['filterVar', [FILTER_VALIDATE_IP]] ]);`) work with `apply('name')` and `__call`, but will not show in IDE completion unless you add a corresponding `@method` on your Rules subclass.
 
 ## API Reference
 

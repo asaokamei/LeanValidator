@@ -43,6 +43,22 @@ class ValidatorRules
 
     private ValidatorData $data;
 
+    /**
+     * ルール名 => [apply の第1引数, 第2引数以降]。
+     * 継承でルールを追加する場合はコンストラクタで array_merge する。
+     *
+     * @var array<string, array{0: string, 1?: array}>
+     */
+    protected array $rules = [
+        'email' => ['filterVar', [FILTER_VALIDATE_EMAIL]],
+        'float' => ['filterVar', [FILTER_VALIDATE_FLOAT]],
+        'url' => ['filterVar', [FILTER_VALIDATE_URL]],
+        'alnum' => ['regex', ['/^[a-zA-Z0-9]+$/']],
+        'alpha' => ['regex', ['/^[a-zA-Z]+$/']],
+        'numeric' => ['regex', ['/^[0-9]+$/']],
+        'alphaDash' => ['regex', ['/^[a-zA-Z0-9_\-]+$/']],
+    ];
+
     public function __construct(ValidatorData $data)
     {
         $this->data = $data;
@@ -68,10 +84,10 @@ class ValidatorRules
      */
     public function __call(string $name, array $args): static
     {
-        $rules = $this->data->rules;
-        if (isset($rules[$name])) {
-            $validator = $rules[$name][0];
-            $args = $rules[$name][1] ?? [];
+        if (isset($this->rules[$name])) {
+            $rule = $this->rules[$name];
+            $validator = $rule[0];
+            $args = $rule[1] ?? [];
             return $this->apply($validator, ...$args);
         }
         return $this->apply($name, ...$args);
