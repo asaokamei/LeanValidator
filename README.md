@@ -345,6 +345,26 @@ Available rules in `Ja` class:
 - `zip()`: Japanese Zip code (000-0000).
 - `tel()`: Japanese Phone number.
 
+#### Network-specific Rules (IP, UUID, etc.)
+
+For network-related validations, use the `Wscore\LeanValidator\Rule\Net` class.
+
+```php
+use Wscore\LeanValidator\Rule\Net;
+
+$v = Validator::make($data);
+$v->forKey('ip_address')->required()->apply(Net::ip());
+$v->forKey('uuid')->required()->apply(Net::uuid());
+```
+
+Available rules in `Net` class:
+- `ip(int $flags = 0)`: IP address (v4 or v6).
+- `ipv4()`: IPv4 address.
+- `ipv6()`: IPv6 address.
+- `mac()`: MAC address.
+- `uuid()`: UUID.
+- `domain()`: Domain name.
+
 You can also create a Rules subclass for better IDE support:
 
 ```php
