@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Wscore\LeanValidator\Rule;
+namespace Wscore\LeanValidator\Trait;
 
 /**
  * required / optional / arrayCount など、必須・条件付き必須のルールを提供するトレイト。

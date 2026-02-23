@@ -4,9 +4,9 @@ declare(strict_types=1);
 namespace Wscore\LeanValidator;
 
 use ReflectionException;
-use Wscore\LeanValidator\Rule\ApplyRules;
-use Wscore\LeanValidator\Rule\ArrayRules;
-use Wscore\LeanValidator\Rule\RequiredRules;
+use Wscore\LeanValidator\Trait\ApplyRules;
+use Wscore\LeanValidator\Trait\ArrayRules;
+use Wscore\LeanValidator\Trait\RequiredRules;
 
 /**
  * 1 キー分のルール適用を担当する。

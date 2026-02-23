@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Wscore\LeanValidator\Rule;
+namespace Wscore\LeanValidator\Trait;
 
 use ReflectionException;
 use Wscore\LeanValidator\ValidatorData;
