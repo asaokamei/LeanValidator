@@ -280,7 +280,7 @@ class ValidatorRules
         }
         $value = $this->data->getCurrentValue();
         if (!is_array($value)) {
-            $msg = $msg ?? $this->data->errorMessage ?? $this->data->defaultMessage;
+            $msg = $msg ?? $this->data->getErrorMessage() ?? $this->data->defaultMessage;
             $this->data->setError($msg);
             return $this;
         }
