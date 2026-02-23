@@ -13,6 +13,7 @@ jobs:
   phpunit:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         # 実行したいPHPのバージョンをリストアップするだけ！
         php-versions: ['8.1', '8.2', '8.3', '8.4', '8.5']
