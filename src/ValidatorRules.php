@@ -34,6 +34,7 @@ use Wscore\LeanValidator\Rule\RequiredRules;
  * @method $this notIn(array $choices)
  * @method $this inKeys(array $allowedKeys)
  * @method $this alphaDash()
+ * @method $this hasChar(string $pattern, int $min = 1)
  */
 class ValidatorRules
 {
@@ -201,5 +202,19 @@ class ValidatorRules
     {
         $value = $this->data->getCurrentValue();
         return is_string($value) && preg_match('/^[a-zA-Z0-9_\-]+$/', $value) === 1;
+    }
+
+    /**
+     * 値のうち、正規表現に一致する文字が少なくとも $min 個あることを検証する。
+     * パスワードの「大文字1文字以上」「記号2文字以上」などに利用可能。
+     */
+    protected function _hasChar(string $pattern, int $min = 1): bool
+    {
+        $value = $this->data->getCurrentValue();
+        if (!is_string($value)) {
+            return false;
+        }
+        $count = preg_match_all($pattern, $value, $m);
+        return $count !== false && $count >= $min;
     }
 }
