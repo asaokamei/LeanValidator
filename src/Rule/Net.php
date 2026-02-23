@@ -7,7 +7,7 @@ use Closure;
 class Net
 {
     /**
-     * IP アドレス（v4, v6）を検証します。
+     * IP address (v4 or v6).
      *
      * @param int $flags FILTER_FLAG_IPV4, FILTER_FLAG_IPV6, FILTER_FLAG_NO_PRIV_RANGE, FILTER_FLAG_NO_RES_RANGE
      */
@@ -19,7 +19,7 @@ class Net
     }
 
     /**
-     * IPv4 アドレスを検証します。
+     * IPv4 address.
      */
     public static function ipv4(): Closure
     {
@@ -27,7 +27,15 @@ class Net
     }
 
     /**
-     * IPv6 アドレスを検証します。
+     * Private IP address (v4 or v6).
+     */
+    public static function privateIp(): Closure
+    {
+        return self::ip(FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+    }
+
+    /**
+     * IPv6 address.
      */
     public static function ipv6(): Closure
     {
@@ -35,7 +43,7 @@ class Net
     }
 
     /**
-     * MAC アドレスを検証します。
+     * MAC address.
      */
     public static function mac(): Closure
     {
@@ -45,7 +53,7 @@ class Net
     }
 
     /**
-     * UUID を検証します。
+     * UUID.
      */
     public static function uuid(): Closure
     {
@@ -55,7 +63,17 @@ class Net
     }
 
     /**
-     * ドメイン名を検証します。
+     * URL.
+     */
+    public static function url(): Closure
+    {
+        return function ($value) {
+            return filter_var($value, FILTER_VALIDATE_URL) !== false;
+        };
+    }
+
+    /**
+     * Domain name.
      */
     public static function domain(): Closure
     {

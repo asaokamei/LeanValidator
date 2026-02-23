@@ -6,6 +6,9 @@ use Closure;
 
 class Ja
 {
+    /**
+     * Hiragana only.
+     */
     public static function hiragana(): Closure
     {
         return function ($value) {
@@ -13,6 +16,9 @@ class Ja
         };
     }
 
+    /**
+     * Katakana only.
+     */
     public static function katakana(): Closure
     {
         return function ($value) {
@@ -20,6 +26,9 @@ class Ja
         };
     }
 
+    /**
+     * Hiragana or Katakana.
+     */
     public static function kana(): Closure
     {
         return function ($value) {
@@ -27,6 +36,9 @@ class Ja
         };
     }
 
+    /**
+     * Hankaku-Katakana only.
+     */
     public static function hankakuKana(): Closure
     {
         return function ($value) {
@@ -34,6 +46,9 @@ class Ja
         };
     }
 
+    /**
+     * Kanji only.
+     */
     public static function kanji(): Closure
     {
         return function ($value) {
@@ -41,6 +56,9 @@ class Ja
         };
     }
 
+    /**
+     * Zenkaku characters (non-ASCII).
+     */
     public static function zenkaku(): Closure
     {
         return function ($value) {
@@ -48,6 +66,9 @@ class Ja
         };
     }
 
+    /**
+     * Japanese Zip code (000-0000).
+     */
     public static function zip(): Closure
     {
         return function ($value) {
@@ -55,6 +76,9 @@ class Ja
         };
     }
 
+    /**
+     * Japanese Phone number (000-0000-0000).
+     */
     public static function tel(): Closure
     {
         return function ($value) {
