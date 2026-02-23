@@ -1,5 +1,7 @@
 # LeanValidator
 
+[![PhpUnit](https://github.com/asaokamei/LeanValidator/actions/workflows/phpunit.yml/badge.svg)](https://github.com/asaokamei/LeanValidator/actions/workflows/phpunit.yml)
+
 An AI-friendly and simple validator for PHP.
 
 ## Features
