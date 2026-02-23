@@ -323,34 +323,35 @@ $v->forKey('zip')->required()->postCode();
 $v->forKey('name_kana')->required()->hiragana();
 ```
 
-### Language- or context-specific Rules (e.g. ValidatorRulesLang)
+### Language- or context-specific Rules (Japanese, etc.)
 
-Use the same mechanism for different rule sets (e.g. per locale or per domain): create a Rules subclass and swap it via `createRules()`.
+For Japanese-specific validations, use the `Wscore\LeanValidator\Rule\Ja` class.
+
+```php
+use Wscore\LeanValidator\Rule\Ja;
+
+$v = Validator::make($data);
+$v->forKey('name_kana')->required()->apply(Ja::kana());
+$v->forKey('zip')->required()->apply(Ja::zip());
+```
+
+Available rules in `Ja` class:
+- `hiragana()`: Hiragana only.
+- `katakana()`: Katakana only.
+- `kana()`: Hiragana and Katakana.
+- `hankakuKana()`: Hankaku-Katakana.
+- `kanji()`: Kanji only.
+- `zenkaku()`: Zenkaku characters (non-ASCII).
+- `zip()`: Japanese Zip code (000-0000).
+- `tel()`: Japanese Phone number.
+
+You can also create a Rules subclass for better IDE support:
 
 ```php
 class ValidatorRulesJa extends ValidatorRules
 {
-    public function postCode(): static { return $this->regex('/^\d{3}-\d{4}$/'); }
-    public function hiragana(): static { return $this->regex('/^[\x{3040}-\x{309F}\s]+$/u'); }
-}
-
-class ValidatorRulesEn extends ValidatorRules
-{
-    public function zipCode(): static { return $this->regex('/^\d{5}(-\d{4})?$/'); }
-}
-
-// Use a Validator subclass that picks the Rules class (e.g. from locale or config).
-class MyValidatorJa extends Validator
-{
-    protected function createRules(): ValidatorRules
-    {
-        return new ValidatorRulesJa($this);
-    }
-    /** @return ValidatorRulesJa */
-    public function forKey(string $key, ?string $errorMsg = null): ValidatorRules
-    {
-        return parent::forKey($key, $errorMsg);
-    }
+    public function hiragana(): static { return $this->apply(Ja::hiragana()); }
+    public function zip(): static { return $this->apply(Ja::zip()); }
 }
 ```
 
