@@ -102,6 +102,7 @@ trait ArrayRules
     /** 子インスタンスを生成（nest/forEach/arrayApply で、コールバックに渡す型を親と同じにする） */
     private function makeChild(mixed $value): ValidatorData
     {
+        /** @var ValidatorData $class */
         $class = get_class($this->data);
         return $class::make($value);
     }
