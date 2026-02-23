@@ -30,6 +30,7 @@ class ValidatorData
         'alnum' => ['regex', ['/^[a-zA-Z0-9]+$/']],
         'alpha' => ['regex', ['/^[a-zA-Z]+$/']],
         'numeric' => ['regex', ['/^[0-9]+$/']],
+        'alphaDash' => ['regex', ['/^[a-zA-Z0-9_\-]+$/']],
     ];
 
     public function __construct(array $data)

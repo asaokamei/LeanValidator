@@ -29,6 +29,11 @@ use Wscore\LeanValidator\Rule\RequiredRules;
  * @method $this contains(string $needle)
  * @method $this equalTo(mixed $expect)
  * @method $this length(?int $min = null, ?int $max = null)
+ * @method $this date(?string $format = null)
+ * @method $this accepted()
+ * @method $this notIn(array $choices)
+ * @method $this inKeys(array $allowedKeys)
+ * @method $this alphaDash()
  */
 class ValidatorRules
 {
@@ -143,5 +148,42 @@ class ValidatorRules
             return false;
         }
         return true;
+    }
+
+    protected function _date(?string $format = null): bool
+    {
+        $value = $this->data->getCurrentValue();
+        if (!is_string($value) && !is_int($value)) {
+            return false;
+        }
+        $format = $format ?? 'Y-m-d';
+        $dt = \DateTime::createFromFormat('!' . $format, (string) $value);
+        if ($dt === false) {
+            return false;
+        }
+        return $dt->format($format) === (string) $value;
+    }
+
+    protected function _accepted(): bool
+    {
+        $value = $this->data->getCurrentValue();
+        $accepted = [true, '1', 1, 'on', 'yes', 'true'];
+        return in_array($value, $accepted, true);
+    }
+
+    protected function _notIn(array $choices): bool
+    {
+        return !in_array($this->data->getCurrentValue(), $choices, true);
+    }
+
+    protected function _inKeys(array $allowedKeys): bool
+    {
+        return array_key_exists($this->data->getCurrentValue(), $allowedKeys);
+    }
+
+    protected function _alphaDash(): bool
+    {
+        $value = $this->data->getCurrentValue();
+        return is_string($value) && preg_match('/^[a-zA-Z0-9_\-]+$/', $value) === 1;
     }
 }
