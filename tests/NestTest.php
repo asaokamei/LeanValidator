@@ -35,4 +35,18 @@ class NestTest extends TestCase
         $errors = $v->getErrors()->toArray();
         $this->assertArrayHasKey('address.post_code', $errors);
     }
+
+    public function testNestAndArrayApply()
+    {
+        $data = ['address' => ['post_code' => '123-1234', 'cities' => ['Tokyo', 'Osaka']]];
+        $v = Validator::make($data);
+
+        $v->forKey('address')->required()->nest(function (Validator $child) {
+            $child->forKey('post_code')->required()->regex('/^\d{3}-\d{4}$/');
+            $child->forKey('cities')->required()->arrayApply('string');
+        });
+
+        $this->assertTrue($v->isValid());
+        $this->assertSame($data, $v->getValidatedData());
+    }
 }
