@@ -21,10 +21,8 @@ This package also provides a sanitization utility that can be used to clean and 
 
 Use composer to install the package.
 
-TODO: register package on packagist.org!!!
-
 ```bash
-composer require wscore/lean-validator
+composer require wscore/leanvalidator
 ```
 
 ## Basic Usage
