@@ -19,10 +19,13 @@ trait ArrayRules
      */
     public function arrayApply(mixed $validator, mixed ...$args): static
     {
-        if ($this->data->isCurrentError()) {
+        if ($this->data->isCurrentError() || $this->data->isSkipped()) {
             return $this;
         }
         $value = $this->data->getCurrentValue();
+        if ($value === null) {
+            $value = [];
+        }
         if (!is_array($value)) {
             $this->data->setError();
             return $this;
@@ -48,6 +51,9 @@ trait ArrayRules
             return $this;
         }
         $value = $this->data->getCurrentValue();
+        if ($value === null) {
+            $value = [];
+        }
         if (!is_array($value)) {
             $msg = $msg ?? $this->data->getErrorMessage() ?? $this->data->defaultMessage;
             $this->data->setError($msg);
@@ -68,10 +74,13 @@ trait ArrayRules
      */
     public function forEach(callable $callback): static
     {
-        if ($this->data->isCurrentError()) {
+        if ($this->data->isCurrentError() || $this->data->isSkipped()) {
             return $this;
         }
         $value = $this->data->getCurrentValue();
+        if ($value === null) {
+            $value = [];
+        }
         if (!is_array($value)) {
             $this->data->setError();
             return $this;
