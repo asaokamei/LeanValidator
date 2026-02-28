@@ -10,7 +10,7 @@ use Wscore\LeanValidator\Trait\RequiredRules;
 
 /**
  * 1 キー分のルール適用を担当する。
- * ValidatorData::forKey() から返され、required / apply / arrayApply などを提供する。
+ * ValidatorData::field() から返され、required / apply / asList などを提供する。
  *
  * ルール（int, string などの組み込み述語）はこのクラスに定義している。
  * 適用ロジック・required 系・配列系は Rule\* トレイトに分離。
@@ -66,7 +66,7 @@ class ValidatorRules
     }
 
     /**
-     * ValidatorRules 経由でエラーを付与する（主に forEach 内で使用）。
+     * ValidatorRules 経由でエラーを付与する（主に asListObject 内で使用）。
      */
     public function setError(?string $msg = null): static
     {

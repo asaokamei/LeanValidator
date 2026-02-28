@@ -7,7 +7,7 @@ use ReflectionException;
 use Wscore\LeanValidator\ValidatorData;
 
 /**
- * 配列・ネスト（arrayApply / nest / forEach）を提供するトレイト。
+ * 配列・ネスト（asList / asObject / asListObject）を提供するトレイト。
  * ValidatorRules で use する。$this->data で ValidatorData にアクセスすること。
  */
 trait ArrayRules
@@ -17,7 +17,7 @@ trait ArrayRules
      *
      * @throws ReflectionException
      */
-    public function arrayApply(mixed $validator, mixed ...$args): static
+    public function asList(mixed $validator, mixed ...$args): static
     {
         if ($this->data->isCurrentError() || $this->data->isSkipped()) {
             return $this;
@@ -32,7 +32,7 @@ trait ArrayRules
         }
         $child = $this->makeChild($value);
         foreach ($value as $key => $item) {
-            $child->forKey((string) $key)->apply($validator, ...$args);
+            $child->field((string) $key)->apply($validator, ...$args);
         }
         if (!$child->isValid()) {
             $this->data->setErrors($child->getErrors()->toArray());
@@ -45,7 +45,7 @@ trait ArrayRules
     /**
      * ネストした配列を子 ValidatorData で検証する。
      */
-    public function nest(callable $callback, ?string $msg = null): static
+    public function asObject(callable $callback, ?string $msg = null): static
     {
         if ($this->data->isCurrentError() || $this->data->isSkipped()) {
             return $this;
@@ -72,7 +72,7 @@ trait ArrayRules
     /**
      * 配列の各要素を「1件ずつ ValidatorData で検証」する。
      */
-    public function forEach(callable $callback): static
+    public function asListObject(callable $callback): static
     {
         if ($this->data->isCurrentError() || $this->data->isSkipped()) {
             return $this;
@@ -88,7 +88,7 @@ trait ArrayRules
         $childValidator = $this->makeChild($value);
         foreach ($value as $key => $item) {
             if (!is_array($item)) {
-                $childValidator->forKey((string) $key)->setError('Value is not an array.');
+                $childValidator->field((string) $key)->setError('Value is not an array.');
                 continue;
             }
             $child = $this->makeChild($item);
@@ -96,7 +96,7 @@ trait ArrayRules
             if (!$child->isValid()) {
                 $childValidator->setErrors($child->getErrors()->toArray(), (string) $key);
             } else {
-                $childValidator->forKey((string) $key);
+                $childValidator->field((string) $key);
                 $childValidator->setValidatedCurrentKey($child->getValidatedData());
             }
         }
@@ -108,7 +108,7 @@ trait ArrayRules
         return $this;
     }
 
-    /** 子インスタンスを生成（nest/forEach/arrayApply で、コールバックに渡す型を親と同じにする） */
+    /** 子インスタンスを生成（asObject/asListObject/asList で、コールバックに渡す型を親と同じにする） */
     private function makeChild(mixed $value): ValidatorData
     {
         /** @var ValidatorData $class */

@@ -16,8 +16,8 @@ class ValidatedDataTest extends TestCase
             'extra' => 'not validated'
         ];
         $v = Validator::make($data);
-        $v->forKey('name')->required()->string();
-        $v->forKey('age')->required()->int();
+        $v->field('name')->required()->string();
+        $v->field('age')->required()->int();
 
         $validated = $v->getValidatedData();
         $this->assertEquals([
@@ -31,20 +31,20 @@ class ValidatedDataTest extends TestCase
     {
         $data = ['age' => 'not an int'];
         $v = Validator::make($data);
-        $v->forKey('age')->required()->int();
+        $v->field('age')->required()->int();
 
         $this->expectException(RuntimeException::class);
         $v->getValidatedData();
     }
 
-    public function testGetValidatedDataWithArrayApply()
+    public function testGetValidatedDataWithAsList()
     {
         $data = [
             'tags' => ['php', 'testing', 'validator'],
             'other' => 'hidden'
         ];
         $v = Validator::make($data);
-        $v->forKey('tags')->arrayApply('string');
+        $v->field('tags')->asList('string');
 
         $validated = $v->getValidatedData();
         $this->assertEquals([
@@ -52,7 +52,7 @@ class ValidatedDataTest extends TestCase
         ], $validated);
     }
 
-    public function testGetValidatedDataWithForEach()
+    public function testGetValidatedDataWithAsListObject()
     {
         $data = [
             'users' => [
@@ -62,9 +62,9 @@ class ValidatedDataTest extends TestCase
             'meta' => 'hide'
         ];
         $v = Validator::make($data);
-        $v->forKey('users')->forEach(function(Validator $child) {
-            $child->forKey('id')->required()->int();
-            $child->forKey('name')->required()->string();
+        $v->field('users')->asListObject(function(Validator $child) {
+            $child->field('id')->required()->int();
+            $child->field('name')->required()->string();
         });
 
         $validated = $v->getValidatedData();

@@ -18,10 +18,10 @@ class InvokableObjectTest extends TestCase
             }
         };
 
-        $v->forKey('price')->apply($rule, 50);
+        $v->field('price')->apply($rule, 50);
         $this->assertTrue($v->isValid());
 
-        $v->forKey('price')->apply($rule, 150);
+        $v->field('price')->apply($rule, 150);
         $this->assertFalse($v->isValid());
     }
 }

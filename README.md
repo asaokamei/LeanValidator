@@ -8,7 +8,7 @@ An AI-friendly and simple validator for PHP.
 
 - **Fluent Interface**: Easy to read and write validation rules.
 - **Whitelist Validation**: `getValidatedData()` returns only the data that has been validated.
-- **Nested Structures**: Supports validation of arrays and nested objects using `arrayApply()` and `forEach()`.
+- **Nested Structures**: Supports validation of arrays and nested objects using `asList()` and `asObject()`.
 - **Flexible Rules**: Use built-in rules, closures, or any PHP callable.
 - **AI-Friendly**: Simple and consistent API that is easy for AI to understand and generate.
 
@@ -47,12 +47,12 @@ $v = Validator::make($data);
 
 ### Defining Rules
 
-Use `forKey` to specify the field and chain validation rules.
+Use `field` to specify the field and chain validation rules.
 
 ```php
-$v->forKey('name')->required()->string();
-$v->forKey('age')->int(18, 99);
-$v->forKey('email')->email();
+$v->field('name')->required()->string();
+$v->field('age')->int(18, 99);
+$v->field('email')->email();
 ```
 
 ### Checking Results
@@ -75,10 +75,10 @@ The validator provides two default error messages for common validation rules.
 - `required`: "This field is required."
 - `email`: "Please enter a valid email address."
 
-To override these messages, set `forKey` with a custom message.
+To override these messages, set `field` with a custom message.
 
 ```php
-$v->forKey('age', 'Please enter your age (must be above 18)')
+$v->field('age', 'Please enter your age (must be above 18)')
   ->required('You must be at least 18 years old.')
   ->int(18);
 ```
@@ -95,7 +95,7 @@ $v->defaultMessageRequired = 'Cannot skip this field!';
 Use `message()` to set a custom message for the **next** rule in the chain.
 
 ```php
-$v->forKey('age', 'Please enter your age (must be above 18)')
+$v->field('age', 'Please enter your age (must be above 18)')
   ->required()
   ->message('Age must be a number')->int()
   ->message('You must be at least 18')->int(18);
@@ -104,19 +104,19 @@ $v->forKey('age', 'Please enter your age (must be above 18)')
 ### Optional Fields
 
 ```php
-$v->forKey('extra_info')->optional()->string();
+$v->field('extra_info')->optional()->string();
 
 // With default value
-$v->forKey('status')->optional('active')->string();
+$v->field('status')->optional('active')->string();
 ```
 
 ### Required Fields
 
 ```php
-$v->forKey('name')->required()->string();
+$v->field('name')->required()->string();
 
 // With a custom message
-$v->forKey('title')->required('Title is required')->string();
+$v->field('title')->required('Title is required')->string();
 ```
 
 
@@ -129,7 +129,7 @@ Required if `$otherKey`'s value matches `$expect`.
 
 ```php
 // 'state' is required only if 'country' is 'US'
-$v->forKey('state')->requiredIf('country', 'US')->string();
+$v->field('state')->requiredIf('country', 'US')->string();
 ```
 
 #### `requiredUnless(string $otherKey, mixed $expect, ?string $msg = null, mixed $elseOverwrite = null)`
@@ -137,7 +137,7 @@ Required unless `$otherKey`'s value matches `$expect`.
 
 ```php
 // 'state' is required only if 'country' is 'US'
-$v->forKey('state')->requiredUnless('country', 'US')->string();
+$v->field('state')->requiredUnless('country', 'US')->string();
 ```
 
 #### `requiredWith(string $otherKey, ?string $msg = null, mixed $elseOverwrite = null)`
@@ -145,7 +145,7 @@ Required if `$otherKey` exists in the input data (even if it's null).
 
 ```php
 // 'confirm_password' is required if 'password' exists
-$v->forKey('confirm_password')->requiredWith('password')->string();
+$v->field('confirm_password')->requiredWith('password')->string();
 ```
 
 #### `requiredWithout(string $otherKey, ?string $msg = null, mixed $elseOverwrite = null)`
@@ -153,7 +153,7 @@ Required if `$otherKey` does not exist in the input data.
 
 ```php
 // 'guest_email' is required if 'user_id' is missing
-$v->forKey('guest_email')->requiredWithout('user_id')->email();
+$v->field('guest_email')->requiredWithout('user_id')->email();
 ```
 
 #### `requiredWhen(callable $call, ?string $msg = null, mixed $elseOverwrite = null)`
@@ -161,7 +161,7 @@ Required if the callback `$call($data)` returns true. The `$data` contains all i
 
 ```php
 // 'name' is required only if 'type' is 'personal'
-$v->forKey('name')->requiredWhen(function($data) {
+$v->field('name')->requiredWhen(function($data) {
     return ($data['type'] ?? '') === 'personal';
 })->string();
 ```
@@ -170,7 +170,7 @@ $v->forKey('name')->requiredWhen(function($data) {
 For all these methods, if the condition is not met, you can provide an `elseOverwrite` value. The field will be set to this value and further validation rules in the chain will be skipped.
 
 ```php
-$v->forKey('type')->requiredIf('category', 'special', 'Required', 'default-type')->string();
+$v->field('type')->requiredIf('category', 'special', 'Required', 'default-type')->string();
 ```
 
 ### Built-in Rules
@@ -194,12 +194,12 @@ $v->forKey('type')->requiredIf('category', 'special', 'Required', 'default-type'
 
 ### Validating Arrays of Scalars
 
-Use `arrayApply()` to apply a rule to every element in an array.
+Use `asList()` to apply a rule to every element in an array.
 
 ```php
-$v->forKey('tags')->arrayApply('string');
+$v->field('tags')->asList('string');
 // Or with parameters
-$v->forKey('scores')->arrayApply('int', 0, 100);
+$v->field('scores')->asList('int', 0, 100);
 ```
 
 ### Validating Array Size
@@ -207,12 +207,12 @@ $v->forKey('scores')->arrayApply('int', 0, 100);
 Use `arrayCount()` to validate the number of elements in an array.
 
 ```php
-$v->forKey('tags')->arrayCount(1, 5, 'Please provide 1 to 5 tags');
+$v->field('tags')->arrayCount(1, 5, 'Please provide 1 to 5 tags');
 ```
 
 ### Validating Nested Objects (Associative Arrays)
 
-Use `nest()` to validate a nested associative array without using dot-notation in `forKey`.
+Use `asObject()` to validate a nested associative array without using dot-notation in `field`.
 Only the validated fields will be included in `getValidatedData()` (whitelist).
 
 ```php
@@ -223,10 +223,10 @@ $data = ['address' => [
 ]];
 $v = Validator::make($data);
 
-$v->forKey('address')->required()->nest(function (Validator $child) {
-    $child->forKey('post_code')->required()->regex('/^\d{3}-\d{4}$/');
-    $child->forKey('town')->required()->string();
-    $child->forKey('city')->required()->string();
+$v->field('address')->required()->asObject(function (Validator $child) {
+    $child->field('post_code')->required()->regex('/^\d{3}-\d{4}$/');
+    $child->field('town')->required()->string();
+    $child->field('city')->required()->string();
 });
 if ($v->isValid()) {
     $validated = $v->getValidatedData();
@@ -234,7 +234,7 @@ if ($v->isValid()) {
 ```
 ### Validating Arrays of Objects (Nested Data)
 
-Use `forEach()` to validate complex nested structures.
+Use `asListObject()` to validate complex nested structures.
 
 ```php
 $data = [
@@ -245,9 +245,9 @@ $data = [
 ];
 
 $v = Validator::make($data);
-$v->forKey('users')->forEach(function(Validator $child) {
-    $child->forKey('name')->required()->string();
-    $child->forKey('email')->required()->email();
+$v->field('users')->asListObject(function(Validator $child) {
+    $child->field('name')->required()->string();
+    $child->field('email')->required()->email();
 });
 ```
 
@@ -257,24 +257,24 @@ You can use `apply()` to use any callable, closure, or rule class as a validatio
 
 ```php
 // Using a closure
-$v->forKey('username')->apply(fn($value) => !in_array($value, ['admin', 'root']));
+$v->field('username')->apply(fn($value) => !in_array($value, ['admin', 'root']));
 
 // Using a closure that operates on the validator instance
-$v->forKey('zip')->apply(function() {
+$v->field('zip')->apply(function() {
     $this->regex('/^\d{3}-\d{4}$/');
 });
 
 // Using external functions
-$v->forKey('count')->apply('is_numeric');
+$v->field('count')->apply('is_numeric');
 
 // Using first-class callables
-$v->forKey('price')->apply($myValidator->checkPrice(...));
+$v->field('price')->apply($myValidator->checkPrice(...));
 
 // Using external rule classes (instantiated automatically)
-$v->forKey('token')->apply(MyCustomRule::class, $options);
+$v->field('token')->apply(MyCustomRule::class, $options);
 
 // Using invokable objects
-$v->forKey('price')->apply(new MyInvokableRule(), $minPrice);
+$v->field('price')->apply(new MyInvokableRule(), $minPrice);
 ```
 
 ### Extending: Custom Rules and IDE Completion
@@ -283,7 +283,7 @@ You can add project-specific rules **with IDE code completion** by extending `Va
 
 1. **Extend ValidatorRules** and add your methods (or register names in `$rules` and use `@method` in the docblock).
 2. **Override `createRules()`** in your Validator subclass to return your rules instance.
-3. **Override `forKey()` with `@return YourValidatorRules`** so that `$v->forKey('x')` is inferred as your class and your custom methods appear in autocomplete.
+3. **Override `field()` with `@return YourValidatorRules`** so that `$v->field('x')` is inferred as your class and your custom methods appear in autocomplete.
 
 ```php
 use Wscore\LeanValidator\Validator;
@@ -311,16 +311,16 @@ class MyValidator extends Validator
     }
 
     /** @return MyValidatorRules */
-    public function forKey(string $key, ?string $errorMsg = null): ValidatorRules
+    public function field(string $key, ?string $errorMsg = null): ValidatorRules
     {
-        return parent::forKey($key, $errorMsg);
+        return parent::field($key, $errorMsg);
     }
 }
 
 // Usage: IDE will suggest postCode() and hiragana()
 $v = MyValidator::make($data);
-$v->forKey('zip')->required()->postCode();
-$v->forKey('name_kana')->required()->hiragana();
+$v->field('zip')->required()->postCode();
+$v->field('name_kana')->required()->hiragana();
 ```
 
 ### Language- or context-specific Rules (Japanese, etc.)
@@ -331,8 +331,8 @@ For Japanese-specific validations, use the `Wscore\LeanValidator\Rule\Ja` class.
 use Wscore\LeanValidator\Rule\Ja;
 
 $v = Validator::make($data);
-$v->forKey('name_kana')->required()->apply(Ja::kana());
-$v->forKey('zip')->required()->apply(Ja::zip());
+$v->field('name_kana')->required()->apply(Ja::kana());
+$v->field('zip')->required()->apply(Ja::zip());
 ```
 
 Available rules in `Ja` class:
@@ -353,8 +353,8 @@ For network-related validations, use the `Wscore\LeanValidator\Rule\Net` class.
 use Wscore\LeanValidator\Rule\Net;
 
 $v = Validator::make($data);
-$v->forKey('ip_address')->required()->apply(Net::ip());
-$v->forKey('uuid')->required()->apply(Net::uuid());
+$v->field('ip_address')->required()->apply(Net::ip());
+$v->field('uuid')->required()->apply(Net::uuid());
 ```
 
 Available rules in `Net` class:
@@ -382,7 +382,7 @@ Rules added in a ValidatorRules subclass by merging into `$this->rules` in the c
 ### `Validator::make(array|string|numeric $data): static`
 Creates a validator. If a string or number is passed, it treats it as a single item to be validated.
 
-### `forKey(string $key, ?string $errorMsg = null): static`
+### `field(string $key, ?string $errorMsg = null): static`
 Specifies the field to validate. Optionally sets a default error message for any rule in the chain.
 
 ### `required(?string $msg = null): static`
