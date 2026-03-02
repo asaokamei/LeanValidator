@@ -351,10 +351,13 @@ For network-related validations, use the `Wscore\LeanValidator\Rule\Net` class.
 
 ```php
 use Wscore\LeanValidator\Rule\Net;
+use Wscore\LeanValidator\Rule\Date;
 
 $v = Validator::make($data);
 $v->field('ip_address')->required()->apply(Net::ip());
 $v->field('uuid')->required()->apply(Net::uuid());
+$v->field('start_date')->required()->apply(Date::htmlDate());
+$v->field('start_date')->apply(Date::notFutureDate());
 ```
 
 Available rules in `Net` class:
@@ -364,6 +367,32 @@ Available rules in `Net` class:
 - `mac()`: MAC address.
 - `uuid()`: UUID.
 - `domain()`: Domain name.
+
+#### Date-specific Rules (HTML date/time, etc.)
+
+For HTML date/time formats and date constraints, use the `Wscore\LeanValidator\Rule\Date` class.
+
+```php
+use Wscore\LeanValidator\Rule\Date;
+
+$v = Validator::make($data);
+$v->field('birthday')->required()->apply(Date::htmlDate());
+$v->field('appointment_at')->apply(Date::htmlDateTimeLocal());
+$v->field('work_time')->apply(Date::htmlTime());
+$v->field('billing_month')->apply(Date::htmlMonth());
+$v->field('reporting_week')->apply(Date::htmlWeek());
+
+// Disallow future dates (including today is allowed)
+$v->field('birthday')->apply(Date::notFutureDate());
+```
+
+Available rules in `Date` class:
+- `htmlDate()`: HTML5 `<input type="date">` (`Y-m-d`).
+- `htmlMonth()`: HTML5 `<input type="month">` (`Y-m`).
+- `htmlTime()`: HTML5 `<input type="time">` (`H:i` or `H:i:s`).
+- `htmlDateTimeLocal()`: HTML5 `<input type="datetime-local">` (`Y-m-d\TH:i` or `Y-m-d\TH:i:s`).
+- `htmlWeek()`: HTML5 `<input type="week">` (`YYYY-Www`).
+- `notFutureDate(?string $format = 'Y-m-d')`: Rejects dates strictly in the future, using the given format.
 
 You can also create a Rules subclass for better IDE support:
 
