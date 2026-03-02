@@ -10,7 +10,7 @@ class RequiredWithTest extends TestCase
     public function testRequiredWithWhenKeyExists()
     {
         $v = Validator::make(['other' => 'exists', 'target' => '']);
-        $v->forKey('target')->requiredWith('other', 'Target is required if other exists');
+        $v->field('target')->requiredWith('other', 'Target is required if other exists');
 
         $this->assertFalse($v->isValid());
         $this->assertEquals('Target is required if other exists', $v->getErrorsFlat()['target']);
@@ -19,7 +19,7 @@ class RequiredWithTest extends TestCase
     public function testRequiredWithWhenKeyMissing()
     {
         $v = Validator::make(['target' => '']);
-        $v->forKey('target')->requiredWith('other', 'Target is required if other exists')->string();
+        $v->field('target')->requiredWith('other', 'Target is required if other exists')->string();
 
         $this->assertTrue($v->isValid());
         $this->assertArrayNotHasKey('target', $v->getValidatedData());
@@ -28,7 +28,7 @@ class RequiredWithTest extends TestCase
     public function testRequiredWithWhenKeyExistsWithValue()
     {
         $v = Validator::make(['other' => 'exists', 'target' => 'value']);
-        $v->forKey('target')->requiredWith('other')->string();
+        $v->field('target')->requiredWith('other')->string();
 
         $this->assertTrue($v->isValid());
         $this->assertEquals('value', $v->getValidatedData()['target']);
@@ -38,7 +38,7 @@ class RequiredWithTest extends TestCase
     {
         $v = Validator::make(['target' => 'original']);
         // 'other' is missing, so it should overwrite with 'default' and skip string() validation
-        $v->forKey('target')->requiredWith('other', 'msg', 'default')->string();
+        $v->field('target')->requiredWith('other', 'msg', 'default')->string();
 
         $this->assertTrue($v->isValid());
         $this->assertEquals('default', $v->getValidatedData()['target']);
@@ -47,7 +47,7 @@ class RequiredWithTest extends TestCase
     public function testRequiredWithoutWhenKeyMissing()
     {
         $v = Validator::make(['target' => '']);
-        $v->forKey('target')->requiredWithout('other', 'Target is required if other is missing');
+        $v->field('target')->requiredWithout('other', 'Target is required if other is missing');
 
         $this->assertFalse($v->isValid());
         $this->assertEquals('Target is required if other is missing', $v->getErrorsFlat()['target']);
@@ -56,7 +56,7 @@ class RequiredWithTest extends TestCase
     public function testRequiredWithoutWhenKeyExists()
     {
         $v = Validator::make(['other' => 'exists', 'target' => '']);
-        $v->forKey('target')->requiredWithout('other')->string();
+        $v->field('target')->requiredWithout('other')->string();
 
         $this->assertTrue($v->isValid());
         $this->assertArrayNotHasKey('target', $v->getValidatedData());
@@ -66,7 +66,7 @@ class RequiredWithTest extends TestCase
     {
         // Even if the value is null, the key exists
         $v = Validator::make(['other' => null, 'target' => '']);
-        $v->forKey('target')->requiredWith('other', 'Required');
+        $v->field('target')->requiredWith('other', 'Required');
 
         $this->assertFalse($v->isValid());
     }

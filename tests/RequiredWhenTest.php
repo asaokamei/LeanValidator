@@ -10,7 +10,7 @@ class RequiredWhenTest extends TestCase
     public function testRequiredWhenTrue()
     {
         $v = Validator::make(['type' => 'personal', 'name' => '']);
-        $v->forKey('name')->requiredWhen(function($data) {
+        $v->field('name')->requiredWhen(function($data) {
             return ($data['type'] ?? '') === 'personal';
         })->string();
 
@@ -22,7 +22,7 @@ class RequiredWhenTest extends TestCase
     public function testRequiredWhenFalse()
     {
         $v = Validator::make(['type' => 'business', 'name' => '']);
-        $v->forKey('name')->requiredWhen(function($data) {
+        $v->field('name')->requiredWhen(function($data) {
             return ($data['type'] ?? '') === 'personal';
         })->string();
 
@@ -34,7 +34,7 @@ class RequiredWhenTest extends TestCase
     public function testRequiredWhenWithElseOverwrite()
     {
         $v = Validator::make(['type' => 'business', 'name' => '']);
-        $v->forKey('name')->requiredWhen(
+        $v->field('name')->requiredWhen(
             fn($data) => ($data['type'] ?? '') === 'personal',
             'Name is required',
             'N/A'
@@ -48,7 +48,7 @@ class RequiredWhenTest extends TestCase
     public function testRequiredWhenTrueWithValue()
     {
         $v = Validator::make(['type' => 'personal', 'name' => 'John']);
-        $v->forKey('name')->requiredWhen(function($data) {
+        $v->field('name')->requiredWhen(function($data) {
             return ($data['type'] ?? '') === 'personal';
         })->string();
 

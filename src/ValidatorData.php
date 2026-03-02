@@ -8,7 +8,7 @@ use RuntimeException;
 
 /**
  * データの保持と「現在キー」の状態を管理する。
- * ルールの適用は forKey() が返す ValidatorRules に委譲する。
+ * ルールの適用は field() が返す ValidatorRules に委譲する。
  */
 class ValidatorData
 {
@@ -45,7 +45,7 @@ class ValidatorData
      * 指定キーに対するルール適用オブジェクトを返す。
      * サブクラスで createRules() をオーバーライドすると、独自の ValidatorRules を差し替え可能。
      */
-    public function forKey(string $key, ?string $errorMsg = null): ValidatorRules
+    public function field(string $key, ?string $errorMsg = null): ValidatorRules
     {
         $this->currentKey = $key;
         $this->isError = false;
@@ -55,7 +55,7 @@ class ValidatorData
     }
 
     /**
-     * forKey() が返すルール適用オブジェクトを生成する。
+     * field() が返すルール適用オブジェクトを生成する。
      * プロジェクトごとのカスタムルールや ValidatorRulesLang を使う場合はオーバーライドする。
      */
     protected function createRules(): ValidatorRules
@@ -65,14 +65,14 @@ class ValidatorData
 
     /**
      * make('string') のときなど、currentKey が既に設定されている場合に
-     * forKey(currentKey)->$name(...$args) へ委譲する。
+     * field(currentKey)->$name(...$args) へ委譲する。
      */
     public function __call(string $name, array $args): ValidatorRules
     {
         if ($this->currentKey !== '') {
-            return $this->forKey($this->currentKey)->$name(...$args);
+            return $this->field($this->currentKey)->$name(...$args);
         }
-        throw new BadMethodCallException("Call forKey() first or use make(array).");
+        throw new BadMethodCallException("Call field() first or use make(array).");
     }
 
     // ----- 結果取得（公開API） -----

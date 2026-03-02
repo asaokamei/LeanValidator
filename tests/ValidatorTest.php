@@ -30,9 +30,9 @@ class ValidatorTest extends TestCase
     public function testGetErrorsFlat()
     {
         $v = Validator::make(['name' => '', 'age' => 'old', 'other' => '']);
-        $v->forKey('name', 'Name is required')->required();
-        $v->forKey('age', 'Age must be int')->int();
-        $v->forKey('other')->required();
+        $v->field('name', 'Name is required')->required();
+        $v->field('age', 'Age must be int')->int();
+        $v->field('other')->required();
 
         $flat = $v->getErrorsFlat();
         $this->assertEquals('Name is required', $flat['name']);
@@ -45,11 +45,11 @@ class ValidatorTest extends TestCase
         $v = Validator::make(['name' => 'John']);
         
         // Success
-        $v->forKey('name')->required();
+        $v->field('name')->required();
         $this->assertTrue($v->isValid());
         
         // Failure
-        $v->forKey('missing')->required();
+        $v->field('missing')->required();
         $this->assertFalse($v->isValid());
         $this->assertArrayHasKey('missing', $v->getErrorsFlat());
     }
@@ -58,10 +58,10 @@ class ValidatorTest extends TestCase
     {
         $v = Validator::make(['name' => 'John', 'age' => 30]);
         
-        $v->forKey('name')->string();
+        $v->field('name')->string();
         $this->assertTrue($v->isCurrentOK());
         
-        $v->forKey('age')->string();
+        $v->field('age')->string();
         $this->assertTrue($v->isCurrentError());
     }
 
@@ -69,16 +69,16 @@ class ValidatorTest extends TestCase
     {
         $v = Validator::make(['age' => 30, 'string_age' => '30']);
         
-        $v->forKey('age')->int();
+        $v->field('age')->int();
         $this->assertTrue($v->isCurrentOK());
         
-        $v->forKey('age')->int(18, 50);
+        $v->field('age')->int(18, 50);
         $this->assertTrue($v->isCurrentOK());
 
-        $v->forKey('age')->int(40);
+        $v->field('age')->int(40);
         $this->assertTrue($v->isCurrentError());
 
-        $v->forKey('string_age')->int();
+        $v->field('string_age')->int();
         $this->assertTrue($v->isCurrentError());
     }
 
@@ -86,10 +86,10 @@ class ValidatorTest extends TestCase
     {
         $v = Validator::make(['email' => 'test@example.com', 'invalid' => 'not-an-email']);
         
-        $v->forKey('email')->email();
+        $v->field('email')->email();
         $this->assertTrue($v->isCurrentOK());
         
-        $v->forKey('invalid')->email();
+        $v->field('invalid')->email();
         $this->assertTrue($v->isCurrentError());
     }
 
@@ -97,10 +97,10 @@ class ValidatorTest extends TestCase
     {
         $v = Validator::make(['zip' => '123-4567', 'invalid' => '1234567']);
         
-        $v->forKey('zip')->regex('/^\d{3}-\d{4}$/');
+        $v->field('zip')->regex('/^\d{3}-\d{4}$/');
         $this->assertTrue($v->isCurrentOK());
         
-        $v->forKey('invalid')->regex('/^\d{3}-\d{4}$/');
+        $v->field('invalid')->regex('/^\d{3}-\d{4}$/');
         $this->assertTrue($v->isCurrentError());
     }
 
@@ -108,22 +108,22 @@ class ValidatorTest extends TestCase
     {
         $v = Validator::make(['list' => [1, 2, 3]]);
         
-        $v->forKey('list')->arrayCount(1, 5);
+        $v->field('list')->arrayCount(1, 5);
         $this->assertTrue($v->isCurrentOK());
         
-        $v->forKey('list')->arrayCount(5);
+        $v->field('list')->arrayCount(5);
         $this->assertTrue($v->isCurrentError());
     }
 
-    public function testArrayApplyWithInt()
+    public function testAsListWithInt()
     {
         $v = Validator::make(['list' => [10, 20, 30]]);
         
         // $child is bound as $this to the closure
-        $v->forKey('list')->arrayApply($v->int(...), 0, 100);
+        $v->field('list')->asList($v->int(...), 0, 100);
         $this->assertTrue($v->isCurrentOK());
         
-        $v->forKey('list')->arrayApply($v->int(...), 0, 15);
+        $v->field('list')->asList($v->int(...), 0, 15);
         $this->assertTrue($v->isCurrentError());
         // Error for key 20 (index 1) and 30 (index 2)
         $errors = $v->getErrors()->toArray();
@@ -131,7 +131,7 @@ class ValidatorTest extends TestCase
         $this->assertArrayHasKey('list.2', $errors);
     }
 
-    public function testForEach()
+    public function testAsListObject()
     {
         $data = [
             'users' => [
@@ -142,9 +142,9 @@ class ValidatorTest extends TestCase
         ];
         $v = Validator::make($data);
         
-        $v->forKey('users')->forEach(function(Validator $child) {
-            $child->forKey('name')->required()->string();
-            $child->forKey('age')->required()->int(18);
+        $v->field('users')->asListObject(function(Validator $child) {
+            $child->field('name')->required()->string();
+            $child->field('age')->required()->int(18);
         });
         
         $this->assertFalse($v->isValid());

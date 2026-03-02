@@ -11,18 +11,18 @@ class HasValueTest extends TestCase
     {
         $v = Validator::make(['a' => 'v', 'b' => 0, 'c' => false, 'd' => []]);
         
-        $this->assertTrue($v->forKey('a')->hasValue());
-        $this->assertTrue($v->forKey('b')->hasValue());
-        $this->assertTrue($v->forKey('c')->hasValue());
-        $this->assertTrue($v->forKey('d')->hasValue()); // empty array is a value
+        $this->assertTrue($v->field('a')->hasValue());
+        $this->assertTrue($v->field('b')->hasValue());
+        $this->assertTrue($v->field('c')->hasValue());
+        $this->assertTrue($v->field('d')->hasValue()); // empty array is a value
     }
 
     public function testHasValueWithEmptyValues()
     {
         $v = Validator::make(['a' => '', 'b' => null]);
         
-        $this->assertFalse($v->forKey('a')->hasValue());
-        $this->assertFalse($v->forKey('b')->hasValue());
-        $this->assertFalse($v->forKey('missing')->hasValue());
+        $this->assertFalse($v->field('a')->hasValue());
+        $this->assertFalse($v->field('b')->hasValue());
+        $this->assertFalse($v->field('missing')->hasValue());
     }
 }
