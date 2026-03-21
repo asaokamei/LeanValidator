@@ -474,6 +474,8 @@ Use these methods to apply specific transformations:
 - `toTrim(...$fields)`: Trims whitespace.
 - `toDigits(...$fields)`: Removes all non-digit characters.
 - `toInt(...$fields)`: If the string is a valid decimal integer (`FILTER_VALIDATE_INT`), converts it to PHP `int`; otherwise leaves the string unchanged so validation can reject it.
+- `toFloat(...$fields)`: If the string is a valid float (`FILTER_VALIDATE_FLOAT`), converts it to PHP `float`; otherwise leaves the string unchanged.
+- `toBool(...$fields)`: Uses `FILTER_VALIDATE_BOOLEAN` with `FILTER_NULL_ON_FAILURE`. Recognized **true** values include (case-insensitive) `1`, `true`, `on`, `yes`; **false** values include `0`, `false`, `off`, `no`, and empty string. Anything else (e.g. `maybe`, `2`) is left as the original string so validation can reject it. Output is real PHP `bool`; map to `0`/`1` or DB types at persistence if your schema requires it.
 - `toLower(...$fields)`: Converts to lowercase.
 - `toUpper(...$fields)`: Converts to uppercase.
 - `toKana(...$fields)`: Converts to Zenkaku-Kana (needs `mbstring`).

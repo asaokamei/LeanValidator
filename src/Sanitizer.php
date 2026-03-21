@@ -13,6 +13,8 @@ namespace Wscore\LeanValidator;
  * @method self toHankaku(...$fields)
  * @method self toZenkaku(...$fields)
  * @method self toInt(...$fields)
+ * @method self toFloat(...$fields)
+ * @method self toBool(...$fields)
  */
 class Sanitizer
 {
@@ -30,6 +32,8 @@ class Sanitizer
             'lower' => fn($v) => \strtolower($v),
             'upper' => fn($v) => \strtoupper($v),
             'int' => fn ($v) => (($i = \filter_var($v, \FILTER_VALIDATE_INT)) !== false ? $i : $v),
+            'float' => fn ($v) => (($f = \filter_var($v, \FILTER_VALIDATE_FLOAT)) !== false ? $f : $v),
+            'bool' => fn ($v) => (($b = \filter_var($v, \FILTER_VALIDATE_BOOLEAN, \FILTER_NULL_ON_FAILURE)) !== null ? $b : $v),
         ];
         $this->globalDefault = ['utf8', 'trim'];
 

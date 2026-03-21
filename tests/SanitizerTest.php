@@ -94,6 +94,38 @@ class SanitizerTest extends TestCase
         $this->assertSame(-1, $cleaned['offset']);
     }
 
+    public function testToFloat()
+    {
+        $s = $this->getSanitizer();
+        $s->toFloat('price');
+
+        $cleaned = $s->clean([
+            'price' => ' 3.14 ',
+            'bad' => '1.2.3',
+        ]);
+        $this->assertSame(3.14, $cleaned['price']);
+        $this->assertSame('1.2.3', $cleaned['bad']);
+    }
+
+    public function testToBool()
+    {
+        $s = $this->getSanitizer();
+        $s->toBool('a')->toBool('b')->toBool('c')->toBool('d')->toBool('e');
+
+        $cleaned = $s->clean([
+            'a' => '1',
+            'b' => '0',
+            'c' => 'yes',
+            'd' => 'maybe',
+            'e' => '2',
+        ]);
+        $this->assertTrue($cleaned['a']);
+        $this->assertFalse($cleaned['b']);
+        $this->assertTrue($cleaned['c']);
+        $this->assertSame('maybe', $cleaned['d']);
+        $this->assertSame('2', $cleaned['e']);
+    }
+
     public function testToLower()
     {
         $s = $this->getSanitizer();
