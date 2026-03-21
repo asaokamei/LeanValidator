@@ -9,7 +9,7 @@ namespace Wscore\LeanValidator;
  * 利用例:
  *   $v = Validator::make($data);
  *   $v->field('name')->required()->string();
- *   $v->field('age')->int(18, 99);
+ *   $v->field('age')->int()->between(18, 99);
  *   if ($v->isValid()) { $safe = $v->getValidatedData(); }
  *
  * @see ValidatorData データ・現在キー・結果の管理

@@ -36,12 +36,12 @@ class ApplyTest extends TestCase
     public function testApplyWithInternalMethod()
     {
         $v = Validator::make(['age' => 20]);
-        $v->field('age')->apply('int', 18, 30);
+        $v->field('age')->apply('int')->apply('between', 18, 30);
         $this->assertTrue($v->isCurrentOK());
         $this->assertEquals(['age' => 20], $v->getValidatedData());
 
         $v = Validator::make(['age' => 10]);
-        $v->field('age')->apply('int', 18, 30);
+        $v->field('age')->apply('int')->apply('between', 18, 30);
         $this->assertTrue($v->isCurrentError());
     }
 

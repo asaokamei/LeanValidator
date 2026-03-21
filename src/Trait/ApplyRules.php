@@ -44,7 +44,7 @@ trait ApplyRules
                 return $this;
             }
             if (isset($this->rules[$validator])) {
-                $endApply(($this->rules[$validator])($value));
+                $endApply(($this->rules[$validator])($value, ...$args));
                 return $this;
             }
         }

@@ -15,7 +15,10 @@ use Wscore\LeanValidator\Trait\RequiredRules;
  * ルール（int, string などの組み込み述語）はこのクラスに定義している。
  * 適用ロジック・required 系・配列系は Rule\* トレイトに分離。
  *
- * @method $this int(?int $min = null, ?int $max = null)
+ * @method $this int()
+ * @method $this min(int $min)
+ * @method $this max(int $max)
+ * @method $this between(int $min, int $max)
  * @method $this string()
  * @method $this filterVar(string $filter)
  * @method $this email()
@@ -48,7 +51,7 @@ class ValidatorRules
     /**
      * 追加・上書き用。組み込みは builtinRules() とマージされる（同名キーはこちらが優先）。
      *
-     * @var array<string, callable(mixed): bool>
+     * @var array<string, callable>
      */
     protected array $rules = [];
 
@@ -59,23 +62,25 @@ class ValidatorRules
     }
 
     /**
-     * @return array<string, callable(mixed): bool>
+     * @return array<string, callable>
      */
     private static function builtinRules(): array
     {
         return [
-            'email' => fn (mixed $v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_EMAIL) !== false,
-            'float' => fn (mixed $v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_FLOAT) !== false,
-            'url' => fn (mixed $v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_URL) !== false,
-            'alnum' => fn (mixed $v): bool => is_string($v) && preg_match('/^[a-zA-Z0-9]+$/', $v) === 1,
-            'alpha' => fn (mixed $v): bool => is_string($v) && preg_match('/^[a-zA-Z]+$/', $v) === 1,
-            'digit' => fn (mixed $v): bool => is_string($v) && preg_match('/^[0-9]+$/', $v) === 1,
-            'numeric' => fn (mixed $v): bool => is_numeric($v),
-            'alphaDash' => fn (mixed $v): bool => is_string($v) && preg_match('/^[a-zA-Z0-9_\-]+$/', $v) === 1,
+            'email' => fn ($v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_EMAIL) !== false,
+            'float' => fn ($v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_FLOAT) !== false,
+            'url' => fn ($v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_URL) !== false,
+            'alnum' => fn ($v): bool => is_string($v) && preg_match('/^[a-zA-Z0-9]+$/', $v) === 1,
+            'alpha' => fn ($v): bool => is_string($v) && preg_match('/^[a-zA-Z]+$/', $v) === 1,
+            'digit' => fn ($v): bool => is_string($v) && preg_match('/^[0-9]+$/', $v) === 1,
+            'numeric' => fn ($v): bool => is_numeric($v),
+            'alphaDash' => fn ($v): bool => is_string($v) && preg_match('/^[a-zA-Z0-9_\-]+$/', $v) === 1,
+            'min' => fn ($v, int $min): bool => is_int($v) && $v >= $min,
+            'max' => fn ($v, int $max): bool => is_int($v) && $v <= $max,
         ];
     }
 
-    /** @param callable(mixed): bool $callback */
+    /** @param callable $callback */
     public function addRule(string $name, callable $callback): static
     {
         $this->rules[$name] = $callback;
@@ -119,19 +124,21 @@ class ValidatorRules
         return is_string($this->data->getCurrentValue());
     }
 
-    protected function _int(?int $min = null, ?int $max = null): bool
+    protected function _int(): bool
+    {
+        return is_int($this->data->getCurrentValue());
+    }
+
+    protected function _between(int $min, int $max): bool
     {
         $value = $this->data->getCurrentValue();
         if (!is_int($value)) {
             return false;
         }
-        if ($min !== null && $value < $min) {
-            return false;
+        if ($min > $max) {
+            [$min, $max] = [$max, $min];
         }
-        if ($max !== null && $value > $max) {
-            return false;
-        }
-        return true;
+        return $value >= $min && $value <= $max;
     }
 
     protected function _filterVar(int $filter): bool

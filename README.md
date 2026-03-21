@@ -51,7 +51,7 @@ Use `field` to specify the field and chain validation rules.
 
 ```php
 $v->field('name')->required()->string();
-$v->field('age')->int(18, 99);
+$v->field('age')->int()->between(18, 99);
 $v->field('email')->email();
 ```
 
@@ -80,7 +80,8 @@ To override these messages, set `field` with a custom message.
 ```php
 $v->field('age', 'Please enter your age (must be above 18)')
   ->required('You must be at least 18 years old.')
-  ->int(18);
+  ->int()
+  ->min(18);
 ```
 
 You can change the default messages simply by modifying the messages. 
@@ -97,8 +98,8 @@ Use `message()` to set a custom message for the **next** rule in the chain.
 ```php
 $v->field('age', 'Please enter your age (must be above 18)')
   ->required()
-  ->message('Age must be a number')->int()
-  ->message('You must be at least 18')->int(18);
+  ->message('Age must be an integer')->int()
+  ->message('You must be at least 18')->min(18);
 ```
 
 ### Optional Fields
@@ -176,7 +177,10 @@ $v->field('type')->requiredIf('category', 'special', 'Required', 'default-type')
 ### Built-in Rules
 
 - `string()`: Checks if value is a string.
-- `int(?int $min, ?int $max)`: Checks if value is an integer and within range.
+- `int()`: Checks that the value is a PHP integer (`is_int`).
+- `min(int $min)`: Value must be a PHP integer and `>= $min`.
+- `max(int $max)`: Value must be a PHP integer and `<= $max`.
+- `between(int $min, int $max)`: Value must be a PHP integer and between `$min` and `$max` (inclusive; if `$min > $max` the bounds are swapped).
 - `float()`: Validates if the value is a float.
 - `email()`: Validates email format.
 - `url()`: Validates URL format.
@@ -199,8 +203,8 @@ Use `asList()` to apply a rule to every element in an array.
 
 ```php
 $v->field('tags')->asList('string');
-// Or with parameters
-$v->field('scores')->asList('int', 0, 100);
+// Integer elements between 0 and 100 (each element must be a PHP int)
+$v->field('scores')->asList('between', 0, 100);
 ```
 
 ### Validating Array Size

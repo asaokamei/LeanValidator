@@ -68,14 +68,14 @@ class ValidatorTest extends TestCase
     public function testInt()
     {
         $v = Validator::make(['age' => 30, 'string_age' => '30']);
-        
+
         $v->field('age')->int();
         $this->assertTrue($v->isCurrentOK());
-        
-        $v->field('age')->int(18, 50);
+
+        $v->field('age')->int()->between(18, 50);
         $this->assertTrue($v->isCurrentOK());
 
-        $v->field('age')->int(40);
+        $v->field('age')->int()->min(40);
         $this->assertTrue($v->isCurrentError());
 
         $v->field('string_age')->int();
@@ -120,10 +120,10 @@ class ValidatorTest extends TestCase
         $v = Validator::make(['list' => [10, 20, 30]]);
         
         // $child is bound as $this to the closure
-        $v->field('list')->asList($v->int(...), 0, 100);
+        $v->field('list')->asList($v->between(...), 0, 100);
         $this->assertTrue($v->isCurrentOK());
-        
-        $v->field('list')->asList($v->int(...), 0, 15);
+
+        $v->field('list')->asList($v->between(...), 0, 15);
         $this->assertTrue($v->isCurrentError());
         // Error for key 20 (index 1) and 30 (index 2)
         $errors = $v->getErrors()->toArray();
@@ -144,7 +144,7 @@ class ValidatorTest extends TestCase
         
         $v->field('users')->asListObject(function(Validator $child) {
             $child->field('name')->required()->string();
-            $child->field('age')->required()->int(18);
+            $child->field('age')->required()->int()->min(18);
         });
         
         $this->assertFalse($v->isValid());
