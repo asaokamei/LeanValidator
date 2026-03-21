@@ -7,6 +7,21 @@ use Wscore\LeanValidator\Validator;
 
 class ApplyTest extends TestCase
 {
+    public function testApplyWithRulesAliasFromValidatorRules()
+    {
+        $v = Validator::make(['addr' => 'a@b.co']);
+        $v->field('addr')->apply('email');
+        $this->assertTrue($v->isCurrentOK());
+
+        $v = Validator::make(['addr' => 'not-an-email']);
+        $v->field('addr')->apply('email');
+        $this->assertTrue($v->isCurrentError());
+
+        $v = Validator::make(['n' => '3.14']);
+        $v->field('n')->apply('float');
+        $this->assertTrue($v->isCurrentOK());
+    }
+
     public function testApplyWithInternalMethod()
     {
         $v = Validator::make(['age' => 20]);

@@ -44,6 +44,13 @@ trait ApplyRules
                 $endApply($result);
                 return $this;
             }
+            // ValidatorRules::$rules のエイリアス（email, float など）を __call と同様に解決する
+            if (isset($this->rules[$validator])) {
+                $rule = $this->rules[$validator];
+                $mapped = $rule[0];
+                $mappedArgs = $rule[1] ?? [];
+                return $this->apply($mapped, ...$mappedArgs);
+            }
         }
 
         if ($validator instanceof Closure) {
