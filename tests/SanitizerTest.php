@@ -68,6 +68,32 @@ class SanitizerTest extends TestCase
         $this->assertEquals('0312345678', $cleaned['tel']);
     }
 
+    public function testToInt()
+    {
+        $s = $this->getSanitizer();
+        $s->toInt('age');
+
+        $data = [
+            'age' => ' 42 ',
+            'bad' => '12x',
+            'empty' => '',
+        ];
+        $cleaned = $s->clean($data);
+
+        $this->assertSame(42, $cleaned['age']);
+        $this->assertSame('12x', $cleaned['bad']);
+        $this->assertSame('', $cleaned['empty']);
+    }
+
+    public function testToIntNegative()
+    {
+        $s = $this->getSanitizer();
+        $s->toInt('offset');
+
+        $cleaned = $s->clean(['offset' => '-1']);
+        $this->assertSame(-1, $cleaned['offset']);
+    }
+
     public function testToLower()
     {
         $s = $this->getSanitizer();

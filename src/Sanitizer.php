@@ -12,6 +12,7 @@ namespace Wscore\LeanValidator;
  * @method self toKana(...$fields)
  * @method self toHankaku(...$fields)
  * @method self toZenkaku(...$fields)
+ * @method self toInt(...$fields)
  */
 class Sanitizer
 {
@@ -28,6 +29,7 @@ class Sanitizer
             'digits' => fn($v) => \preg_replace('/[^0-9]/', '', $v),
             'lower' => fn($v) => \strtolower($v),
             'upper' => fn($v) => \strtoupper($v),
+            'int' => fn ($v) => (($i = \filter_var($v, \FILTER_VALIDATE_INT)) !== false ? $i : $v),
         ];
         $this->globalDefault = ['utf8', 'trim'];
 

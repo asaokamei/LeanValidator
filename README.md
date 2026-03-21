@@ -473,6 +473,7 @@ Use these methods to apply specific transformations:
 - `toUtf8(...$fields)`: Ensures valid UTF-8.
 - `toTrim(...$fields)`: Trims whitespace.
 - `toDigits(...$fields)`: Removes all non-digit characters.
+- `toInt(...$fields)`: If the string is a valid decimal integer (`FILTER_VALIDATE_INT`), converts it to PHP `int`; otherwise leaves the string unchanged so validation can reject it.
 - `toLower(...$fields)`: Converts to lowercase.
 - `toUpper(...$fields)`: Converts to uppercase.
 - `toKana(...$fields)`: Converts to Zenkaku-Kana (needs `mbstring`).
