@@ -183,7 +183,8 @@ $v->field('type')->requiredIf('category', 'special', 'Required', 'default-type')
 - `regex(string $pattern)`: Validates against a regular expression.
 - `alnum()`: Validates alphanumeric characters.
 - `alpha()`: Validates alphabetic characters.
-- `numeric()`: Validates numeric characters.
+- `digit()`: Validates that the value is a string containing only ASCII digits (`0`–`9`), one or more characters.
+- `numeric()`: Validates that the value is numeric in the PHP sense (`is_numeric()`), including int/float and numeric strings (e.g. `"123"`, `"1.5"`).
 - `in(array $choices)`: Validates if the value is within the given choices.
 - `contains(string $needle)`: Validates if the value contains the needle.
 - `equalTo(mixed $expect)`: Validates if the value is equal to the expected value.

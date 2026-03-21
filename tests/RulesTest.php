@@ -53,12 +53,37 @@ class RulesTest extends TestCase
 
     public function testNumeric()
     {
-        $v = Validator::make(['val' => '123', 'invalid' => '123a']);
-        
-        $v->field('val')->numeric();
+        $v = Validator::make([
+            's' => '123',
+            'f' => 1.5,
+            'i' => 42,
+            'invalid' => '123a',
+        ]);
+
+        $v->field('s')->numeric();
         $this->assertTrue($v->isCurrentOK());
-        
+
+        $v->field('f')->numeric();
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('i')->numeric();
+        $this->assertTrue($v->isCurrentOK());
+
         $v->field('invalid')->numeric();
+        $this->assertTrue($v->isCurrentError());
+    }
+
+    public function testDigit()
+    {
+        $v = Validator::make(['ok' => '123', 'bad' => '123a', 'intVal' => 123]);
+
+        $v->field('ok')->digit();
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('bad')->digit();
+        $this->assertTrue($v->isCurrentError());
+
+        $v->field('intVal')->digit();
         $this->assertTrue($v->isCurrentError());
     }
 

@@ -24,6 +24,7 @@ use Wscore\LeanValidator\Trait\RequiredRules;
  * @method $this regex(string $pattern)
  * @method $this alnum()
  * @method $this alpha()
+ * @method $this digit()
  * @method $this numeric()
  * @method $this in(array $choices)
  * @method $this contains(string $needle)
@@ -68,7 +69,8 @@ class ValidatorRules
             'url' => fn (mixed $v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_URL) !== false,
             'alnum' => fn (mixed $v): bool => is_string($v) && preg_match('/^[a-zA-Z0-9]+$/', $v) === 1,
             'alpha' => fn (mixed $v): bool => is_string($v) && preg_match('/^[a-zA-Z]+$/', $v) === 1,
-            'numeric' => fn (mixed $v): bool => is_string($v) && preg_match('/^[0-9]+$/', $v) === 1,
+            'digit' => fn (mixed $v): bool => is_string($v) && preg_match('/^[0-9]+$/', $v) === 1,
+            'numeric' => fn (mixed $v): bool => is_numeric($v),
             'alphaDash' => fn (mixed $v): bool => is_string($v) && preg_match('/^[a-zA-Z0-9_\-]+$/', $v) === 1,
         ];
     }
