@@ -45,24 +45,39 @@ class ValidatorRules
     private ValidatorData $data;
 
     /**
-     * ルール名 => [apply の第1引数, 第2引数以降]。
-     * 継承でルールを追加する場合はコンストラクタで array_merge する。
+     * 追加・上書き用。組み込みは builtinRules() とマージされる（同名キーはこちらが優先）。
      *
-     * @var array<string, array{0: string, 1?: array}>
+     * @var array<string, callable(mixed): bool>
      */
-    protected array $rules = [
-        'email' => ['filterVar', [FILTER_VALIDATE_EMAIL]],
-        'float' => ['filterVar', [FILTER_VALIDATE_FLOAT]],
-        'url' => ['filterVar', [FILTER_VALIDATE_URL]],
-        'alnum' => ['regex', ['/^[a-zA-Z0-9]+$/']],
-        'alpha' => ['regex', ['/^[a-zA-Z]+$/']],
-        'numeric' => ['regex', ['/^[0-9]+$/']],
-        'alphaDash' => ['regex', ['/^[a-zA-Z0-9_\-]+$/']],
-    ];
+    protected array $rules = [];
 
     public function __construct(ValidatorData $data)
     {
         $this->data = $data;
+        $this->rules = array_merge(self::builtinRules(), $this->rules);
+    }
+
+    /**
+     * @return array<string, callable(mixed): bool>
+     */
+    private static function builtinRules(): array
+    {
+        return [
+            'email' => fn (mixed $v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_EMAIL) !== false,
+            'float' => fn (mixed $v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_FLOAT) !== false,
+            'url' => fn (mixed $v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_URL) !== false,
+            'alnum' => fn (mixed $v): bool => is_string($v) && preg_match('/^[a-zA-Z0-9]+$/', $v) === 1,
+            'alpha' => fn (mixed $v): bool => is_string($v) && preg_match('/^[a-zA-Z]+$/', $v) === 1,
+            'numeric' => fn (mixed $v): bool => is_string($v) && preg_match('/^[0-9]+$/', $v) === 1,
+            'alphaDash' => fn (mixed $v): bool => is_string($v) && preg_match('/^[a-zA-Z0-9_\-]+$/', $v) === 1,
+        ];
+    }
+
+    /** @param callable(mixed): bool $callback */
+    public function addRule(string $name, callable $callback): static
+    {
+        $this->rules[$name] = $callback;
+        return $this;
     }
 
     /**
@@ -85,12 +100,6 @@ class ValidatorRules
      */
     public function __call(string $name, array $args): static
     {
-        if (isset($this->rules[$name])) {
-            $rule = $this->rules[$name];
-            $validator = $rule[0];
-            $args = $rule[1] ?? [];
-            return $this->apply($validator, ...$args);
-        }
         return $this->apply($name, ...$args);
     }
 

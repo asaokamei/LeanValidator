@@ -404,7 +404,7 @@ class ValidatorRulesJa extends ValidatorRules
 }
 ```
 
-Rules added in a ValidatorRules subclass by merging into `$this->rules` in the constructor (e.g. `$this->rules = array_merge($this->rules, [ 'ip' => ['filterVar', [FILTER_VALIDATE_IP]] ]);`) work with `apply('name')` and `__call`, but will not show in IDE completion unless you add a corresponding `@method` on your Rules subclass.
+Rules added with `addRule()` or by merging callables into `$this->rules` in the constructor (same shape as `Sanitizer::$rules`: `fn ($value) => bool`, e.g. `'ip' => fn ($v) => is_string($v) && filter_var($v, FILTER_VALIDATE_IP) !== false`) work with `apply('name')` and `__call`, but will not show in IDE completion unless you add a corresponding `@method` on your Rules subclass.
 
 ## API Reference
 

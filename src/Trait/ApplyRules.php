@@ -16,7 +16,7 @@ trait ApplyRules
 {
     /**
      * バリデーションを適用する。
-     * 内部メソッド名・クロージャ・callable・外部ルールクラスを指定可能。
+     * 内部メソッド名・登録名（$rules）・クロージャ・callable・外部ルールクラスを指定可能。
      *
      * @throws ReflectionException
      */
@@ -40,16 +40,12 @@ trait ApplyRules
         if (is_string($validator)) {
             $internal = '_' . $validator;
             if (method_exists($this, $internal)) {
-                $result = $this->$internal(...$args);
-                $endApply($result);
+                $endApply($this->$internal(...$args));
                 return $this;
             }
-            // ValidatorRules::$rules のエイリアス（email, float など）を __call と同様に解決する
             if (isset($this->rules[$validator])) {
-                $rule = $this->rules[$validator];
-                $mapped = $rule[0];
-                $mappedArgs = $rule[1] ?? [];
-                return $this->apply($mapped, ...$mappedArgs);
+                $endApply(($this->rules[$validator])($value));
+                return $this;
             }
         }
 
@@ -61,39 +57,32 @@ trait ApplyRules
                     return $this->apply($methodName, ...$args);
                 }
                 if (method_exists($this, $methodName)) {
-                    $result = $this->$methodName(...$args);
-                    $endApply($result);
+                    $endApply($this->$methodName(...$args));
                     return $this;
                 }
                 if (method_exists($this, '_' . $methodName)) {
-                    $result = $this->{'_' . $methodName}(...$args);
-                    $endApply($result);
+                    $endApply($this->{'_' . $methodName}(...$args));
                     return $this;
                 }
             }
-            if ($reflection->getNumberOfParameters() === 0) {
-                $result = $validator->call($this);
-            } else {
-                $result = $validator->call($this, $value, ...$args);
-            }
+            $result = $reflection->getNumberOfParameters() === 0
+                ? $validator->call($this)
+                : $validator->call($this, $value, ...$args);
             $endApply($result);
             return $this;
         }
 
         if (is_callable($validator)) {
-            $result = $validator($value, ...$args);
-        } elseif (is_string($validator)) {
-            if (class_exists($validator)) {
-                $rule = new $validator(...$args);
-                $result = $rule($value);
-            } else {
-                throw new BadMethodCallException("Rule [{$validator}] is not defined.");
-            }
-        } else {
-            throw new BadMethodCallException("Rule [{$validator}] is not defined.");
+            $endApply($validator($value, ...$args));
+            return $this;
         }
 
-        $endApply($result);
-        return $this;
+        if (is_string($validator) && class_exists($validator)) {
+            $rule = new $validator(...$args);
+            $endApply($rule($value));
+            return $this;
+        }
+
+        throw new BadMethodCallException("Rule [{$validator}] is not defined.");
     }
 }

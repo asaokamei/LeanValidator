@@ -22,6 +22,17 @@ class ApplyTest extends TestCase
         $this->assertTrue($v->isCurrentOK());
     }
 
+    public function testAddRuleCallableLikeSanitizer()
+    {
+        $v = Validator::make(['x' => 'ok']);
+        $v->field('x')->addRule('isOk', fn ($val) => $val === 'ok')->apply('isOk');
+        $this->assertTrue($v->isCurrentOK());
+
+        $v = Validator::make(['x' => 'no']);
+        $v->field('x')->addRule('isOk', fn ($val) => $val === 'ok')->apply('isOk');
+        $this->assertTrue($v->isCurrentError());
+    }
+
     public function testApplyWithInternalMethod()
     {
         $v = Validator::make(['age' => 20]);
