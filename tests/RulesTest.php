@@ -120,6 +120,21 @@ class RulesTest extends TestCase
         $this->assertTrue($v->isCurrentError());
     }
 
+    public function testSameAs()
+    {
+        $v = Validator::make([
+            'password' => 'secret',
+            'password_confirm' => 'secret',
+            'mismatch' => 'other',
+        ]);
+
+        $v->field('password_confirm')->sameAs('password');
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('mismatch')->sameAs('password');
+        $this->assertTrue($v->isCurrentError());
+    }
+
     public function testLength()
     {
         $v = Validator::make(['val' => 'abcde', 'too_short' => 'abc', 'too_long' => 'abcdefg']);

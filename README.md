@@ -192,6 +192,7 @@ $v->field('type')->requiredIf('category', 'special', 'Required', 'default-type')
 - `in(array $choices)`: Validates if the value is within the given choices.
 - `contains(string $needle)`: Validates if the value contains the needle.
 - `equalTo(mixed $expect)`: Validates if the value is equal to the expected value.
+- `sameAs(string $otherKey)`: Validates that the value strictly matches (`===`) the value at another top-level input key (e.g. password confirmation against `password`).
 - `length(?int $min, ?int $max)`: Checks the length of a string.
 - `filterVar(int $filter)`: Uses PHP's `filter_var`.
 

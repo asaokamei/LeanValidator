@@ -32,6 +32,7 @@ use Wscore\LeanValidator\Trait\RequiredRules;
  * @method $this in(array $choices)
  * @method $this contains(string $needle)
  * @method $this equalTo(mixed $expect)
+ * @method $this sameAs(string $otherKey)
  * @method $this length(?int $min = null, ?int $max = null)
  * @method $this date(?string $format = null)
  * @method $this accepted()
@@ -167,6 +168,12 @@ class ValidatorRules
     protected function _equalTo(mixed $expect): bool
     {
         return $this->data->getCurrentValue() === $expect;
+    }
+
+    /** 現在のフィールドの値が、別キー `$otherKey` の値と厳密一致することを検証する（パスワード確認など）。 */
+    protected function _sameAs(string $otherKey): bool
+    {
+        return $this->data->getCurrentValue() === $this->data->getValueAtKey($otherKey);
     }
 
     protected function _length(?int $min = null, ?int $max = null): bool
