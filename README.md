@@ -191,6 +191,10 @@ $v->field('type')->requiredIf('category', 'special', 'Required', 'default-type')
 - `numeric()`: Validates that the value is numeric in the PHP sense (`is_numeric()`), including int/float and numeric strings (e.g. `"123"`, `"1.5"`).
 - `in(array $choices)`: Validates if the value is within the given choices.
 - `contains(string $needle)`: Validates if the value contains the needle.
+- `startsWith(string $prefix)`: Validates if the string value starts with the prefix.
+- `endsWith(string $suffix)`: Validates if the string value ends with the suffix.
+- `json()`: Validates that the value is a string containing syntactically valid JSON (`json_decode` with no JSON error).
+- `bool()`: Validates that the value is strictly a PHP boolean (`is_bool`), i.e. `true` or `false` (not `1`, `"true"`, etc.).
 - `equalTo(mixed $expect)`: Validates if the value is equal to the expected value.
 - `sameAs(string $otherKey)`: Validates that the value strictly matches (`===`) the value at another top-level input key (e.g. password confirmation against `password`).
 - `length(?int $min, ?int $max)`: Checks the length of a string.

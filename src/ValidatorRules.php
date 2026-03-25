@@ -31,6 +31,10 @@ use Wscore\LeanValidator\Trait\RequiredRules;
  * @method $this numeric()
  * @method $this in(array $choices)
  * @method $this contains(string $needle)
+ * @method $this startsWith(string $prefix)
+ * @method $this endsWith(string $suffix)
+ * @method $this json()
+ * @method $this bool()
  * @method $this equalTo(mixed $expect)
  * @method $this sameAs(string $otherKey)
  * @method $this length(?int $min = null, ?int $max = null)
@@ -163,6 +167,34 @@ class ValidatorRules
     {
         $value = $this->data->getCurrentValue();
         return is_string($value) && str_contains($value, $needle);
+    }
+
+    protected function _startsWith(string $prefix): bool
+    {
+        $value = $this->data->getCurrentValue();
+        return is_string($value) && str_starts_with($value, $prefix);
+    }
+
+    protected function _endsWith(string $suffix): bool
+    {
+        $value = $this->data->getCurrentValue();
+        return is_string($value) && str_ends_with($value, $suffix);
+    }
+
+    protected function _json(): bool
+    {
+        $value = $this->data->getCurrentValue();
+        if (!is_string($value)) {
+            return false;
+        }
+        json_decode($value);
+        return json_last_error() === JSON_ERROR_NONE;
+    }
+
+    /** 値が PHP の真偽値型のみであることを検証する（`true` / `false`）。 */
+    protected function _bool(): bool
+    {
+        return is_bool($this->data->getCurrentValue());
     }
 
     protected function _equalTo(mixed $expect): bool

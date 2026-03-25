@@ -109,6 +109,68 @@ class RulesTest extends TestCase
         $this->assertTrue($v->isCurrentError());
     }
 
+    public function testStartsWith()
+    {
+        $v = Validator::make(['ok' => 'prefix-rest', 'bad' => 'hello']);
+
+        $v->field('ok')->startsWith('prefix-');
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('bad')->startsWith('prefix-');
+        $this->assertTrue($v->isCurrentError());
+    }
+
+    public function testEndsWith()
+    {
+        $v = Validator::make(['ok' => 'rest-suffix', 'bad' => 'hello']);
+
+        $v->field('ok')->endsWith('-suffix');
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('bad')->endsWith('-suffix');
+        $this->assertTrue($v->isCurrentError());
+    }
+
+    public function testJson()
+    {
+        $v = Validator::make([
+            'ok' => '{"a":1}',
+            'bad' => '{',
+            'notString' => 1,
+        ]);
+
+        $v->field('ok')->json();
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('bad')->json();
+        $this->assertTrue($v->isCurrentError());
+
+        $v->field('notString')->json();
+        $this->assertTrue($v->isCurrentError());
+    }
+
+    public function testBool()
+    {
+        $v = Validator::make([
+            't' => true,
+            'f' => false,
+            'one' => 1,
+            'str' => 'true',
+        ]);
+
+        $v->field('t')->bool();
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('f')->bool();
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('one')->bool();
+        $this->assertTrue($v->isCurrentError());
+
+        $v->field('str')->bool();
+        $this->assertTrue($v->isCurrentError());
+    }
+
     public function testEqualTo()
     {
         $v = Validator::make(['val' => '100', 'invalid' => 100]);
