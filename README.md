@@ -62,7 +62,7 @@ if ($v->isValid()) {
     // Get only the validated data
     $validated = $v->getValidatedData();
 } else {
-    // Get error messages as a flat array [key => message]
+    // Get error messages as a flat array [field_path => message]
     $errors = $v->getErrorsFlat();
 }
 ```
@@ -71,20 +71,21 @@ if ($v->isValid()) {
 
 ### Default Error Messages
 
-The validator provides two default error messages for common validation rules.
-- `required`: "This field is required."
-- `email`: "Please enter a valid email address."
-
-To override these messages, set `field` with a custom message.
+By default, the validator provides two error messages for common validation rules:
+- **Default error**: "Please check the input value." (used for rules like `int`, `email`, etc.)
+- **Required error**: "This field is required." (used for `required`)
 
 ```php
-$v->field('age', 'Please enter your age (must be above 18)')
-  ->required('You must be at least 18 years old.')
+$v->field('age')
+  ->required()
   ->int()
   ->min(18);
 ```
 
-You can change the default messages simply by modifying the messages. 
+- If the `age` field is missing, the error message will be "This field is required."
+- If the value is not an integer or is less than 18, the error message will be "Please check the input value."
+
+You can change these default messages for the entire validator instance:
 
 ```php
 $v->defaultMessage = 'Invalid input!';
@@ -93,14 +94,51 @@ $v->defaultMessageRequired = 'Cannot skip this field!';
 
 ### Custom Error Messages
 
-Use `message()` to set a custom message for the **next** rule in the chain.
+You can set custom messages at three levels:
+
+1. **Rule level**: Use `message()` to set a custom message for the **next** rule in the chain.
+2. **Field level**: Use the second argument of `field()` to set a default error message for all rules in that field.
+3. **Required level**: Pass a custom message directly to `required()`.
 
 ```php
-$v->field('age', 'Please enter your age (must be above 18)')
-  ->required()
-  ->message('Age must be an integer')->int()
-  ->message('You must be at least 18')->min(18);
+$v->field('age', 'Please enter your age (must be above 18)') // Field level default
+  ->required('You must be at least 18 years old.')           // Required level
+  ->message('Age must be an integer')->int()                 // Rule level
+  ->message('You must be at least 18')->min(18);             // Rule level
 ```
+
+The validator searches for messages in the following order:
+1. Message passed directly to the rule (via `message()` or `required($msg)`).
+2. Message passed to `field($key, $msg)`.
+3. Global default message (`defaultMessage` or `defaultMessageRequired`).
+
+### Getting Error Messages
+
+If `isValid()` returns `false`, you can retrieve error messages from the validator:
+
+```php
+// Get all errors as a flat array [field_path => first_message]
+$errors = $v->getErrorsFlat();
+
+// Example:
+// [
+//   'email' => 'Please enter a valid email.',
+//   'address.city' => 'This field is required.'
+// ]
+
+// For more control, get the MessageBag object
+$bag = $v->getErrors();
+$allMessages = $bag->toArray(); // [field_path => [message1, message2, ...]]
+```
+
+The `MessageBag` also supports retrieving messages using HTML form field names:
+
+```php
+// If field is 'address[city]', it will look up 'address.city'
+$error = $bag->firstFromFormName('address[city]');
+```
+
+## Validation Flow
 
 ### Optional Fields
 
