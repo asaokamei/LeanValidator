@@ -52,7 +52,8 @@ class ValidatorRules
     use ArrayRules;
 
     private ValidatorData $data;
-    private ?string $temporaryMessage = null;
+    private ?string $methodMessage = null;
+    private ?string $fieldMessage = null;
 
     /**
      * 追加・上書き用。組み込みは builtinRules() とマージされる（同名キーはこちらが優先）。
@@ -61,9 +62,10 @@ class ValidatorRules
      */
     protected array $rules = [];
 
-    public function __construct(ValidatorData $data)
+    public function __construct(ValidatorData $data, ?string $fieldMessage = null)
     {
         $this->data = $data;
+        $this->fieldMessage = $fieldMessage;
         $this->rules = array_merge(self::builtinRules(), $this->rules);
     }
 
@@ -94,11 +96,12 @@ class ValidatorRules
     }
 
     /**
-     * ValidatorRules 経由でエラーを付与する（主に asListObject 内で使用）。
+     * ValidatorRules 経由でエラーを付与する。
      */
     public function setError(?string $msg = null): static
     {
-        $this->data->setError($msg);
+        $errorMsg = $msg ?? $this->methodMessage ?? $this->fieldMessage;
+        $this->data->setError($errorMsg);
         return $this;
     }
 
@@ -122,7 +125,7 @@ class ValidatorRules
      */
     public function message(string $msg): static
     {
-        $this->temporaryMessage = $msg;
+        $this->methodMessage = $msg;
         return $this;
     }
 

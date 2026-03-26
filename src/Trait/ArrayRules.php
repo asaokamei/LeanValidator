@@ -50,16 +50,16 @@ trait ArrayRules
         if ($this->data->isCurrentError() || $this->data->isSkipped()) {
             return $this;
         }
-        $msg = $msg ?? $this->temporaryMessage ?? $this->data->getTemporaryMessage() ?? $this->data->defaultMessage;
-        $this->temporaryMessage = null;
         $value = $this->data->getCurrentValue();
         if ($value === null) {
             $value = [];
         }
         if (!is_array($value)) {
-            $this->data->setError($msg);
+            $this->setError($msg);
+            $this->methodMessage = null;
             return $this;
         }
+        $this->methodMessage = null;
         $child = $this->makeChild($value);
         $callback($child);
         if (!$child->isValid()) {

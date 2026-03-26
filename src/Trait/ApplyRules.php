@@ -26,23 +26,16 @@ trait ApplyRules
             return $this;
         }
 
-        $temporaryMessage = $this->temporaryMessage;
-        $this->temporaryMessage = null;
-
         $value = $this->data->getCurrentValue();
-        $endApply = function ($result) use ($value, $temporaryMessage) {
+        $endApply = function ($result) use ($value) {
             if ($result === false || $this->data->isCurrentError()) {
-                $originalMessage = $this->data->getTemporaryMessage();
-                if ($temporaryMessage) {
-                    $this->data->setTemporaryMessage($temporaryMessage);
-                }
-                $this->data->setError();
-                $this->data->setTemporaryMessage($originalMessage);
+                $this->setError();
             } else {
                 if (!$this->data->isSkipped()) {
                     $this->data->setValidatedCurrentKey($value);
                 }
             }
+            $this->methodMessage = null;
         };
 
         if (is_string($validator)) {

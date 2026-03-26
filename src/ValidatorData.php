@@ -18,10 +18,6 @@ class ValidatorData
     protected bool $isError = false;
     protected bool $isSkipped = false;
     protected MessageBag $errors;
-    /**
-     * @var string|null 次のバリデーションルールでエラーが発生した際に使用する一時的なメッセージ。
-     */
-    protected ?string $temporaryMessage = null;
     public string $defaultMessage = 'Please check the input value.';
     public string $defaultMessageRequired = 'This field is required.';
 
@@ -53,17 +49,16 @@ class ValidatorData
         $this->currentKey = $key;
         $this->isError = false;
         $this->isSkipped = false;
-        $this->temporaryMessage = $message;
-        return $this->createRules();
+        return $this->createRules($message);
     }
 
     /**
      * field() が返すルール適用オブジェクトを生成する。
      * プロジェクトごとのカスタムルールや ValidatorRulesLang を使う場合はオーバーライドする。
      */
-    protected function createRules(): ValidatorRules
+    protected function createRules(?string $message = null): ValidatorRules
     {
-        return new ValidatorRules($this);
+        return new ValidatorRules($this, $message);
     }
 
     /**
@@ -151,7 +146,7 @@ class ValidatorData
 
     public function setError(?string $msg = null): static
     {
-        $errorMsg = $msg ?? $this->temporaryMessage ?? $this->defaultMessage;
+        $errorMsg = $msg ?? $this->defaultMessage;
         if ($this->currentKey === '' || $this->currentKey === '__current_item__') {
             $this->errors->add($errorMsg);
         } else {
@@ -193,14 +188,4 @@ class ValidatorData
         return $this;
     }
 
-    /** ValidatorRules::message() / required() から使用 */
-    public function setTemporaryMessage(?string $msg): void
-    {
-        $this->temporaryMessage = $msg;
-    }
-
-    public function getTemporaryMessage(): ?string
-    {
-        return $this->temporaryMessage;
-    }
 }
