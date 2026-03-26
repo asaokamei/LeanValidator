@@ -210,4 +210,82 @@ class RulesTest extends TestCase
         $v->field('too_long')->length(null, 5);
         $this->assertTrue($v->isCurrentError());
     }
+
+    public function testDate()
+    {
+        $v = Validator::make(['ok' => '2023-10-01', 'bad' => '2023-13-01', 'format' => '01/10/2023']);
+
+        $v->field('ok')->date();
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('bad')->date();
+        $this->assertTrue($v->isCurrentError());
+
+        $v->field('format')->date('d/m/Y');
+        $this->assertTrue($v->isCurrentOK());
+    }
+
+    public function testAccepted()
+    {
+        $v = Validator::make(['t1' => true, 't2' => '1', 't3' => 'on', 't4' => 'yes', 't5' => 'true', 'f1' => false, 'f2' => '0']);
+
+        $v->field('t1')->accepted(); $this->assertTrue($v->isCurrentOK());
+        $v->field('t2')->accepted(); $this->assertTrue($v->isCurrentOK());
+        $v->field('t3')->accepted(); $this->assertTrue($v->isCurrentOK());
+        $v->field('t4')->accepted(); $this->assertTrue($v->isCurrentOK());
+        $v->field('t5')->accepted(); $this->assertTrue($v->isCurrentOK());
+
+        $v->field('f1')->accepted(); $this->assertTrue($v->isCurrentError());
+        $v->field('f2')->accepted(); $this->assertTrue($v->isCurrentError());
+    }
+
+    public function testNotIn()
+    {
+        $v = Validator::make(['val' => 'a', 'invalid' => 'b']);
+
+        $v->field('val')->notIn(['b', 'c']);
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('invalid')->notIn(['b', 'c']);
+        $this->assertTrue($v->isCurrentError());
+    }
+
+    public function testInKeys()
+    {
+        $v = Validator::make(['val' => 'a', 'invalid' => 'z']);
+        $keys = ['a' => 1, 'b' => 2];
+
+        $v->field('val')->inKeys($keys);
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('invalid')->inKeys($keys);
+        $this->assertTrue($v->isCurrentError());
+    }
+
+    public function testAlphaDash()
+    {
+        $v = Validator::make(['ok' => 'a-b_1', 'bad' => 'a b']);
+
+        $v->field('ok')->alphaDash();
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('bad')->alphaDash();
+        $this->assertTrue($v->isCurrentError());
+    }
+
+    public function testHasChar()
+    {
+        $v = Validator::make(['ok' => 'Abc!', 'bad' => 'abc']);
+
+        // Must have at least one upper case
+        $v->field('ok')->hasChar('/[A-Z]/');
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('bad')->hasChar('/[A-Z]/');
+        $this->assertTrue($v->isCurrentError());
+
+        // Must have at least two alphabets
+        $v->field('ok')->hasChar('/[a-z]/', 2);
+        $this->assertTrue($v->isCurrentOK());
+    }
 }
