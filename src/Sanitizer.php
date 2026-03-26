@@ -81,9 +81,16 @@ class Sanitizer
     {
         if (str_starts_with($name, 'to')) {
             $rule = strtolower(substr($name, 2));
-            if (isset($this->rules[$rule])) {
-                return $this->apply($rule, ...$arguments);
+            if ($rule === 'utf8') $rule = 'utf8'; // canonical
+            if (!isset($this->rules[$rule])) {
+                throw new \BadMethodCallException("Rule '{$rule}' for method '{$name}' does not exist.");
             }
+            if ($rule === 'kana' || $rule === 'hankaku' || $rule === 'zenkaku') {
+                if (!\extension_loaded('mbstring')) {
+                    throw new \RuntimeException("mbstring extension is required for {$name}.");
+                }
+            }
+            return $this->apply($rule, ...$arguments);
         }
         throw new \BadMethodCallException("Method {$name} does not exist.");
     }

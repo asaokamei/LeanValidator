@@ -14,10 +14,10 @@ class Net
     public static function ip(int $flags = 0): Closure
     {
         return function ($value) use ($flags) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return filter_var($value, FILTER_VALIDATE_IP, $flags) !== false;
+            return filter_var((string)$value, FILTER_VALIDATE_IP, $flags) !== false;
         };
     }
 
@@ -51,10 +51,10 @@ class Net
     public static function mac(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return filter_var($value, FILTER_VALIDATE_MAC) !== false;
+            return filter_var((string)$value, FILTER_VALIDATE_MAC) !== false;
         };
     }
 
@@ -64,10 +64,10 @@ class Net
     public static function uuid(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $value) === 1;
+            return preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', (string)$value) === 1;
         };
     }
 
@@ -77,10 +77,10 @@ class Net
     public static function url(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return filter_var($value, FILTER_VALIDATE_URL) !== false;
+            return filter_var((string)$value, FILTER_VALIDATE_URL) !== false;
         };
     }
 
@@ -90,10 +90,10 @@ class Net
     public static function domain(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return filter_var($value, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) !== false;
+            return filter_var((string)$value, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) !== false;
         };
     }
 }

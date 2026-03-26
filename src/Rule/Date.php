@@ -12,10 +12,10 @@ class Date
     public static function htmlDate(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return self::matchFormat('Y-m-d', $value);
+            return Date::matchFormat('Y-m-d', (string)$value);
         };
     }
 
@@ -25,10 +25,10 @@ class Date
     public static function htmlMonth(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return self::matchFormat('Y-m', $value);
+            return Date::matchFormat('Y-m', (string)$value);
         };
     }
 
@@ -38,13 +38,14 @@ class Date
     public static function htmlTime(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            if (self::matchFormat('H:i', $value)) {
+            $string = (string)$value;
+            if (Date::matchFormat('H:i', $string)) {
                 return true;
             }
-            if (self::matchFormat('H:i:s', $value)) {
+            if (Date::matchFormat('H:i:s', $string)) {
                 return true;
             }
             return false;
@@ -57,13 +58,14 @@ class Date
     public static function htmlDateTimeLocal(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            if (self::matchFormat('Y-m-d\TH:i', $value)) {
+            $string = (string)$value;
+            if (Date::matchFormat('Y-m-d\TH:i', $string)) {
                 return true;
             }
-            if (self::matchFormat('Y-m-d\TH:i:s', $value)) {
+            if (Date::matchFormat('Y-m-d\TH:i:s', $string)) {
                 return true;
             }
             return false;
@@ -76,10 +78,11 @@ class Date
     public static function htmlWeek(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            if (!preg_match('/^(\d{4})-W(\d{2})$/', $value, $matches)) {
+            $string = (string)$value;
+            if (!preg_match('/^(\d{4})-W(\d{2})$/', $string, $matches)) {
                 return false;
             }
             $year = (int) $matches[1];
@@ -108,7 +111,7 @@ class Date
                 return false;
             }
             $string = (string) $value;
-            if (!self::matchFormat($format, $string)) {
+            if (!Date::matchFormat($format, $string)) {
                 return false;
             }
             $date = \DateTimeImmutable::createFromFormat('!' . $format, $string);
@@ -120,7 +123,7 @@ class Date
         };
     }
 
-    private static function matchFormat(string $format, string $value): bool
+    public static function matchFormat(string $format, string $value): bool
     {
         $dt = \DateTimeImmutable::createFromFormat('!' . $format, $value);
         if ($dt === false) {

@@ -178,9 +178,9 @@ $v->field('type')->requiredIf('category', 'special', 'Required', 'default-type')
 
 - `string()`: Checks if value is a string.
 - `int()`: Checks that the value is a PHP integer (`is_int`).
-- `min(int $min)`: Value must be a PHP integer and `>= $min`.
-- `max(int $max)`: Value must be a PHP integer and `<= $max`.
-- `between(int $min, int $max)`: Value must be a PHP integer and between `$min` and `$max` (inclusive; if `$min > $max` the bounds are swapped).
+- `min(int|float $min)`: Value must be numeric and `>= $min`.
+- `max(int|float $max)`: Value must be numeric and `<= $max`.
+- `between(int|float $min, int|float $max)`: Value must be numeric and between `$min` and `$max` (inclusive; if `$min > $max` the bounds are swapped).
 - `float()`: Validates if the value is a float.
 - `email()`: Validates email format.
 - `url()`: Validates URL format.
@@ -197,7 +197,7 @@ $v->field('type')->requiredIf('category', 'special', 'Required', 'default-type')
 - `bool()`: Validates that the value is strictly a PHP boolean (`is_bool`), i.e. `true` or `false` (not `1`, `"true"`, etc.).
 - `equalTo(mixed $expect)`: Validates if the value is equal to the expected value.
 - `sameAs(string $otherKey)`: Validates that the value strictly matches (`===`) the value at another top-level input key (e.g. password confirmation against `password`).
-- `length(?int $min, ?int $max)`: Checks the length of a string.
+- `length(?int $min = null, ?int $max = null)`: Checks the length of a string.
 - `filterVar(int $filter)`: Uses PHP's `filter_var`.
 
 ## Advanced Validation

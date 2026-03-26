@@ -12,10 +12,10 @@ class Ja
     public static function hiragana(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return preg_match('/^[ぁ-んー]*$/u', $value) === 1;
+            return preg_match('/^[ぁ-んー]*$/u', (string)$value) === 1;
         };
     }
 
@@ -25,10 +25,10 @@ class Ja
     public static function katakana(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return preg_match('/^[ァ-ヶー]*$/u', $value) === 1;
+            return preg_match('/^[ァ-ヶー]*$/u', (string)$value) === 1;
         };
     }
 
@@ -38,10 +38,10 @@ class Ja
     public static function kana(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return preg_match('/^[ぁ-んァ-ヶー]*$/u', $value) === 1;
+            return preg_match('/^[ぁ-んァ-ヶー]*$/u', (string)$value) === 1;
         };
     }
 
@@ -51,10 +51,10 @@ class Ja
     public static function hankakuKana(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return preg_match('/^[｡-ﾟ]*$/u', $value) === 1;
+            return preg_match('/^[｡-ﾟ]*$/u', (string)$value) === 1;
         };
     }
 
@@ -64,10 +64,10 @@ class Ja
     public static function kanji(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return preg_match('/^[一-龠々]*$/u', $value) === 1;
+            return preg_match('/^[一-龠々]*$/u', (string)$value) === 1;
         };
     }
 
@@ -77,10 +77,10 @@ class Ja
     public static function zenkaku(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return preg_match('/^[^ -~｡-ﾟ]*$/u', $value) === 1;
+            return preg_match('/^[^ -~｡-ﾟ]*$/u', (string)$value) === 1;
         };
     }
 
@@ -90,10 +90,10 @@ class Ja
     public static function zip(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return preg_match('/^\d{3}-\d{4}$/', $value) === 1;
+            return preg_match('/^\d{3}-\d{4}$/', (string)$value) === 1;
         };
     }
 
@@ -103,10 +103,10 @@ class Ja
     public static function tel(): Closure
     {
         return function ($value) {
-            if (!is_string($value)) {
+            if (!is_string($value) && !is_int($value)) {
                 return false;
             }
-            return preg_match('/^\d{2,5}-\d{1,4}-\d{3,4}$/', $value) === 1;
+            return preg_match('/^\d{2,5}-\d{1,4}-\d{3,4}$/', (string)$value) === 1;
         };
     }
 }

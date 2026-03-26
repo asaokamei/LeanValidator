@@ -18,9 +18,9 @@ use Wscore\LeanValidator\Trait\RequiredRules;
  * @method $this int()
  * @method $this min(int $min)
  * @method $this max(int $max)
- * @method $this between(int $min, int $max)
+ * @method $this between(int|float $min, int|float $max)
  * @method $this string()
- * @method $this filterVar(string $filter)
+ * @method $this filterVar(int $filter)
  * @method $this email()
  * @method $this float()
  * @method $this url()
@@ -252,7 +252,11 @@ class ValidatorRules
 
     protected function _inKeys(array $allowedKeys): bool
     {
-        return array_key_exists($this->data->getCurrentValue(), $allowedKeys);
+        $key = $this->data->getCurrentValue();
+        if (is_string($key) || is_int($key)) {
+            return array_key_exists($key, $allowedKeys);
+        }
+        return false;
     }
 
     protected function _alphaDash(): bool
