@@ -25,14 +25,14 @@ class MessageTest extends TestCase
     }
 
     /**
-     * message() でセットしたメッセージが、次のルールに残らないことを確認する。
+     * with() でセットしたメッセージが、次のルールに残らないことを確認する。
      */
     public function testMethodMessageIsClearedAfterRule()
     {
         $v = Validator::make(['f1' => 'not-email']);
         
         $v->field('f1', 'field-default')
-            ->message('custom-rule-msg')->string() // 成功するはず
+            ->with('custom-rule-msg')->string() // 成功するはず
             ->email(); // 失敗するはず。ここでは 'field-default' が使われるべき
 
         $errors = $v->getErrorsFlat();
@@ -42,15 +42,15 @@ class MessageTest extends TestCase
     }
 
     /**
-     * message() でセットしたメッセージが、ルールが失敗した時もクリアされることを確認する。
+     * with() でセットしたメッセージが、ルールが失敗した時もクリアされることを確認する。
      */
     public function testMethodMessageIsClearedEvenAfterFailure()
     {
         $v = Validator::make(['f1' => 123]); // Use integer 123
         
         $v->field('f1', 'field-default')
-            ->message('custom-int')->int()   // 成功。この後 'custom-int' はクリアされるはず。
-            ->message('custom-email')->email(); // 失敗。'custom-email' が使われるべき。
+            ->with('custom-int')->int()   // 成功。この後 'custom-int' はクリアされるはず。
+            ->with('custom-email')->email(); // 失敗。'custom-email' が使われるべき。
 
         $errors = $v->getErrorsFlat();
         $this->assertEquals('custom-email', $errors['f1']);
@@ -62,7 +62,7 @@ class MessageTest extends TestCase
     public function testMessageIsolationBetweenFields()
     {
         $v = Validator::make(['f1' => 'abc', 'f2' => 'not-url']);
-        $v->field('f1')->message('msg-f1')->int(); // 失敗
+        $v->field('f1')->with('msg-f1')->int(); // 失敗
         $v->field('f2')->url(); // 失敗。デフォルトメッセージが使われるべき
         
         $errors = $v->getErrorsFlat();
@@ -72,7 +72,7 @@ class MessageTest extends TestCase
 
     /**
      * メッセージの優先順位を確認する。
-     * apply(msg) > message(msg) > field(msg) > default
+     * apply(msg) > with(msg) > field(msg) > default
      */
     public function testMessagePriorities()
     {
@@ -81,14 +81,14 @@ class MessageTest extends TestCase
         // that explicitly call setError($msg).
         $v = Validator::make(['f1' => '']);
         $v->field('f1', 'field-msg')
-            ->message('method-msg')
+            ->with('method-msg')
             ->required('apply-msg'); 
         $this->assertEquals('apply-msg', $v->getErrorsFlat()['f1']);
 
-        // 2. message(msg) が次点
+        // 2. with(msg) が次点
         $v = Validator::make(['f1' => 'abc']);
         $v->field('f1', 'field-msg')
-            ->message('method-msg')
+            ->with('method-msg')
             ->int(); 
         $this->assertEquals('method-msg', $v->getErrorsFlat()['f1']);
 
@@ -117,8 +117,8 @@ class MessageTest extends TestCase
         $this->assertEquals('field-msg', $v->getErrorsFlat()['f1']);
 
         $v = Validator::make(['f2' => '']);
-        // message() vs field msg
-        $v->field('f2', 'field-msg')->message('must-input')->required();
+        // with() vs field msg
+        $v->field('f2', 'field-msg')->with('must-input')->required();
         $this->assertEquals('must-input', $v->getErrorsFlat()['f2']);
     }
 }

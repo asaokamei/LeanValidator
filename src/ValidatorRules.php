@@ -123,10 +123,10 @@ class ValidatorRules
     }
 
     /**
-     * Set a custom error message for the next rule.
-     * This message will be cleared after the next rule (or required) is executed.
+     * Set a custom error with for the next rule.
+     * This with will be cleared after the next rule (or required) is executed.
      */
-    public function message(string $msg): static
+    public function with(string $msg): static
     {
         $this->methodMessage = $msg;
         return $this;

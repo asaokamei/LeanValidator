@@ -157,14 +157,14 @@ class ValidatorTest extends TestCase
     {
         $v = Validator::make(['field' => 123]);
         $v->field('field', 'field-default')
-            ->message('custom-int')->int()   // Success
+            ->with('custom-int')->int()   // Success
             ->email();                       // Fail, should use 'field-default'
         
         $this->assertEquals('field-default', $v->getErrorsFlat()['field']);
 
         $v = Validator::make(['field' => 'abc']);
         $v->field('field', 'field-default')
-            ->message('custom-int')->int()   // Fail, should use 'custom-int'
+            ->with('custom-int')->int()   // Fail, should use 'custom-int'
             ->email();
         
         $this->assertEquals('custom-int', $v->getErrorsFlat()['field']);
@@ -174,7 +174,7 @@ class ValidatorTest extends TestCase
     {
         $v = Validator::make(['field' => '']);
         $v->field('field', 'field-default')
-            ->message('is-required')->required();
+            ->with('is-required')->required();
         
         $this->assertEquals('is-required', $v->getErrorsFlat()['field']);
     }

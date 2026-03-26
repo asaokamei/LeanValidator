@@ -68,7 +68,7 @@ class RequiredIfTest extends TestCase
     {
         // If already error or skipped, requiredIf should do nothing.
         $v = Validator::make(['type' => 'friend', 'name' => '']);
-        $v->field('name')->message('previous error')->required()->requiredIf('type', 'friend');
+        $v->field('name')->with('previous error')->required()->requiredIf('type', 'friend');
         $this->assertEquals('previous error', $v->getErrors()->first('name'));
     }
 }

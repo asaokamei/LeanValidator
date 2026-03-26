@@ -62,7 +62,7 @@ if ($v->isValid()) {
     // Get only the validated data
     $validated = $v->getValidatedData();
 } else {
-    // Get error messages as a flat array [field_path => message]
+    // Get error messages as a flat array [field_path => with]
     $errors = $v->getErrorsFlat();
 }
 ```
@@ -96,7 +96,7 @@ $v->defaultMessageRequired = 'Cannot skip this field!';
 
 You can set custom messages at three levels:
 
-1. **Rule level**: Use `message()` to set a custom message for the **next** rule in the chain. This message is used only for that rule and is cleared immediately after.
+1. **Rule level**: Use `with()` to set a custom message for the **next** rule in the chain. This message is used only for that rule and is cleared immediately after.
 2. **Field level**: Use the second argument of `field()` to set a default error message for all rules in that field.
 3. **Manual level**: Use `addError(string $field, string $message)` to manually add an error to a specific field.
 4. **Required level**: Pass a custom message directly to `required()`.
@@ -105,8 +105,8 @@ You can set custom messages at three levels:
 $v->addError('general', 'Something went wrong!');             // Manual level
 $v->field('age', 'Please enter your age (must be above 18)') // Field level default
   ->required('You must be at least 18 years old.')           // Required level
-  ->message('Age must be an integer')->int()                 // Rule level (applied to next rule)
-  ->message('You must be at least 18')->min(18);             // Rule level (applied to next rule)
+  ->with('Age must be an integer')->int()                 // Rule level (applied to next rule)
+  ->with('You must be at least 18')->min(18);             // Rule level (applied to next rule)
 ```
 
 The `message()` call only affects the rule that immediately follows it. If you want to use custom messages for multiple rules, call `message()` before each one.
@@ -158,7 +158,7 @@ $v->field('status')->optional('active')->string();
 ```php
 $v->field('name')->required()->string();
 
-// With a custom message
+// With a custom with
 $v->field('title')->required('Title is required')->string();
 ```
 

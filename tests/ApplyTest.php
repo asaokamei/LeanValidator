@@ -53,7 +53,7 @@ class ApplyTest extends TestCase
         });
         $this->assertTrue($v->isCurrentOK());
 
-        $v->field('name')->message('Name must be Jane')->apply(function($value, $expected) {
+        $v->field('name')->with('Name must be Jane')->apply(function($value, $expected) {
             return $value === $expected;
         }, 'Jane', 'Name must be Jane');
         $this->assertTrue($v->isCurrentError());
