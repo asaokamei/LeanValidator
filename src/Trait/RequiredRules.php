@@ -13,9 +13,8 @@ trait RequiredRules
     {
         if (!$this->data->hasValue()) {
             $this->setError($msg, $this->data->defaultMessageRequired);
-        } else {
-            $this->methodMessage = null;
         }
+        $this->methodMessage = null;
         return $this;
     }
 

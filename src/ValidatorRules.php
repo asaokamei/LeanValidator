@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Wscore\LeanValidator;
 
+use DateTime;
 use ReflectionException;
 use Wscore\LeanValidator\Trait\ApplyRules;
 use Wscore\LeanValidator\Trait\ArrayRules;
@@ -75,7 +76,9 @@ class ValidatorRules
     private static function builtinRules(): array
     {
         return [
-            'email' => fn ($v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_EMAIL) !== false,
+            'email' => function ($v): bool {
+                return is_string($v) && filter_var($v, FILTER_VALIDATE_EMAIL) !== false;
+            },
             'float' => fn ($v): bool => is_numeric($v) && filter_var($v, FILTER_VALIDATE_FLOAT) !== false,
             'url' => fn ($v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_URL) !== false,
             'alnum' => fn ($v): bool => (is_string($v) || is_int($v)) && preg_match('/^[a-zA-Z0-9]+$/', (string)$v) === 1,
@@ -88,7 +91,6 @@ class ValidatorRules
         ];
     }
 
-    /** @param callable $callback */
     public function addRule(string $name, callable $callback): static
     {
         $this->rules[$name] = $callback;
@@ -240,7 +242,7 @@ class ValidatorRules
             return false;
         }
         $format = $format ?? 'Y-m-d';
-        $dt = \DateTime::createFromFormat('!' . $format, (string) $value);
+        $dt = DateTime::createFromFormat('!' . $format, (string) $value);
         if ($dt === false) {
             return false;
         }

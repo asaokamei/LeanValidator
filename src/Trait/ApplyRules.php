@@ -29,14 +29,16 @@ trait ApplyRules
         $value = $this->data->getCurrentValue();
         $result = $this->applyRule($validator, $value, ...$args);
 
-        if ($result === false || $this->data->isCurrentError()) {
+        if ($result === false) {
             $this->setError();
+        } elseif ($this->data->isCurrentError()) {
+            // Already error, probably setError called within the rule.
         } else {
             if (!$this->data->isSkipped()) {
                 $this->data->setValidatedCurrentKey($value);
             }
-            $this->methodMessage = null;
         }
+        $this->methodMessage = null;
         return $this;
     }
 
