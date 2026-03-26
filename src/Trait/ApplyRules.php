@@ -32,12 +32,12 @@ trait ApplyRules
         $value = $this->data->getCurrentValue();
         $endApply = function ($result) use ($value, $temporaryMessage) {
             if ($result === false || $this->data->isCurrentError()) {
-                $originalMessage = $this->data->getErrorMessage();
+                $originalMessage = $this->data->getTemporaryMessage();
                 if ($temporaryMessage) {
-                    $this->data->setErrorMessage($temporaryMessage);
+                    $this->data->setTemporaryMessage($temporaryMessage);
                 }
                 $this->data->setError();
-                $this->data->setErrorMessage($originalMessage);
+                $this->data->setTemporaryMessage($originalMessage);
             } else {
                 if (!$this->data->isSkipped()) {
                     $this->data->setValidatedCurrentKey($value);

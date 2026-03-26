@@ -11,7 +11,7 @@ trait RequiredRules
 {
     public function required(?string $msg = null): static
     {
-        $msg = $msg ?? $this->temporaryMessage ?? $this->data->getErrorMessage() ?? $this->data->defaultMessageRequired;
+        $msg = $msg ?? $this->temporaryMessage ?? $this->data->getTemporaryMessage() ?? $this->data->defaultMessageRequired;
         $this->temporaryMessage = null;
         if (!$this->data->hasValue()) {
             $this->data->setError($msg);
@@ -94,7 +94,7 @@ trait RequiredRules
 
     public function arrayCount(?int $min = 1, ?int $max = null, ?string $msg = null): static
     {
-        $msg = $msg ?? $this->temporaryMessage ?? $this->data->getErrorMessage() ?? 'Please select the values.';
+        $msg = $msg ?? $this->temporaryMessage ?? $this->data->getTemporaryMessage() ?? 'Please select the values.';
         $this->temporaryMessage = null;
         $value = $this->data->getCurrentValue();
         if (!is_array($value) || ($min !== null && count($value) < $min) || ($max !== null && count($value) > $max)) {

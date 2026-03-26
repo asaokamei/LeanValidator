@@ -98,9 +98,11 @@ You can set custom messages at three levels:
 
 1. **Rule level**: Use `message()` to set a custom message for the **next** rule in the chain. This message is used only for that rule and is cleared immediately after.
 2. **Field level**: Use the second argument of `field()` to set a default error message for all rules in that field.
-3. **Required level**: Pass a custom message directly to `required()`.
+3. **Manual level**: Use `addError(string $field, string $message)` to manually add an error to a specific field.
+4. **Required level**: Pass a custom message directly to `required()`.
 
 ```php
+$v->addError('general', 'Something went wrong!');             // Manual level
 $v->field('age', 'Please enter your age (must be above 18)') // Field level default
   ->required('You must be at least 18 years old.')           // Required level
   ->message('Age must be an integer')->int()                 // Rule level (applied to next rule)
@@ -500,6 +502,9 @@ Returns the validated data. Throws `RuntimeException` if validation failed.
 
 ### `getErrorsFlat(): array`
 Returns a flat array of error messages where keys are the field names.
+
+### `addError(string $fieldName, string $errorMessage): static`
+Manually adds an error message to a specific field. Useful for errors that cannot be expressed with validation rules.
 
 
 ## Sanitizer Features

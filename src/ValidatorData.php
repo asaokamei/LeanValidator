@@ -18,7 +18,10 @@ class ValidatorData
     protected bool $isError = false;
     protected bool $isSkipped = false;
     protected MessageBag $errors;
-    protected ?string $errorMessage = null;
+    /**
+     * @var string|null 次のバリデーションルールでエラーが発生した際に使用する一時的なメッセージ。
+     */
+    protected ?string $temporaryMessage = null;
     public string $defaultMessage = 'Please check the input value.';
     public string $defaultMessageRequired = 'This field is required.';
 
@@ -42,15 +45,15 @@ class ValidatorData
     }
 
     /**
-     * 指定キーに対するルール適用オブジェクトを返す。
-     * サブクラスで createRules() をオーバーライドすると、独自の ValidatorRules を差し替え可能。
+     * 指定キーに対するエラーメッセージを設定する。
+     * フィールド単位のデフォルトメッセージとして機能する。
      */
-    public function field(string $key, ?string $errorMsg = null): ValidatorRules
+    public function field(string $key, ?string $message = null): ValidatorRules
     {
         $this->currentKey = $key;
         $this->isError = false;
         $this->isSkipped = false;
-        $this->errorMessage = $errorMsg;
+        $this->temporaryMessage = $message;
         return $this->createRules();
     }
 
@@ -148,13 +151,23 @@ class ValidatorData
 
     public function setError(?string $msg = null): static
     {
-        $errorMsg = $msg ?? $this->errorMessage ?? $this->defaultMessage;
+        $errorMsg = $msg ?? $this->temporaryMessage ?? $this->defaultMessage;
         if ($this->currentKey === '' || $this->currentKey === '__current_item__') {
             $this->errors->add($errorMsg);
         } else {
             $this->errors->add($errorMsg, $this->currentKey);
         }
         $this->isError = true;
+        return $this;
+    }
+
+    /**
+     * 指定したフィールドにエラーメッセージを追加する。
+     * バリデーションルール以外でエラーを手動設定したい場合に使用する。
+     */
+    public function addError(string $fieldName, string $errorMessage): static
+    {
+        $this->errors->add($errorMessage, $fieldName);
         return $this;
     }
 
@@ -181,13 +194,13 @@ class ValidatorData
     }
 
     /** ValidatorRules::message() / required() から使用 */
-    public function setErrorMessage(?string $msg): void
+    public function setTemporaryMessage(?string $msg): void
     {
-        $this->errorMessage = $msg;
+        $this->temporaryMessage = $msg;
     }
 
-    public function getErrorMessage(): ?string
+    public function getTemporaryMessage(): ?string
     {
-        return $this->errorMessage;
+        return $this->temporaryMessage;
     }
 }
