@@ -98,10 +98,11 @@ class ValidatorRules
     /**
      * ValidatorRules 経由でエラーを付与する。
      */
-    public function setError(?string $msg = null): static
+    public function setError(?string $msg = null, ?string $default = null): static
     {
-        $errorMsg = $msg ?? $this->methodMessage ?? $this->fieldMessage;
+        $errorMsg = $msg ?? $this->methodMessage ?? $this->fieldMessage ?? $default;
         $this->data->setError($errorMsg);
+        $this->methodMessage = null;
         return $this;
     }
 

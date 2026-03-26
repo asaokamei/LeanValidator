@@ -12,9 +12,10 @@ trait RequiredRules
     public function required(?string $msg = null): static
     {
         if (!$this->data->hasValue()) {
-            $this->setError($msg ?? $this->data->defaultMessageRequired);
+            $this->setError($msg, $this->data->defaultMessageRequired);
+        } else {
+            $this->methodMessage = null;
         }
-        $this->methodMessage = null;
         return $this;
     }
 
@@ -95,9 +96,10 @@ trait RequiredRules
     {
         $value = $this->data->getCurrentValue();
         if (!is_array($value) || ($min !== null && count($value) < $min) || ($max !== null && count($value) > $max)) {
-            $this->setError($msg ?? $this->methodMessage ?? $this->fieldMessage ?? 'Please select the values.');
+            $this->setError($msg, 'Please select the values.');
+        } else {
+            $this->methodMessage = null;
         }
-        $this->methodMessage = null;
         return $this;
     }
 }

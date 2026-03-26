@@ -27,26 +27,33 @@ trait ApplyRules
         }
 
         $value = $this->data->getCurrentValue();
-        $endApply = function ($result) use ($value) {
-            if ($result === false || $this->data->isCurrentError()) {
-                $this->setError();
-            } else {
-                if (!$this->data->isSkipped()) {
-                    $this->data->setValidatedCurrentKey($value);
-                }
+        $result = $this->applyRule($validator, $value, ...$args);
+
+        if ($result === false || $this->data->isCurrentError()) {
+            $this->setError();
+        } else {
+            if (!$this->data->isSkipped()) {
+                $this->data->setValidatedCurrentKey($value);
             }
             $this->methodMessage = null;
-        };
+        }
+        return $this;
+    }
 
+    /**
+     * バリデーションルールを実際に呼び出す。
+     *
+     * @throws ReflectionException
+     */
+    protected function applyRule(mixed $validator, mixed $value, mixed ...$args): mixed
+    {
         if (is_string($validator)) {
             $internal = '_' . $validator;
             if (method_exists($this, $internal)) {
-                $endApply($this->$internal(...$args));
-                return $this;
+                return $this->$internal(...$args);
             }
             if (isset($this->rules[$validator])) {
-                $endApply(($this->rules[$validator])($value, ...$args));
-                return $this;
+                return ($this->rules[$validator])($value, ...$args);
             }
         }
 
@@ -55,33 +62,28 @@ trait ApplyRules
             $methodName = $reflection->getName();
             if ($methodName !== '{closure}') {
                 if (isset($this->rules[$methodName])) {
-                    return $this->apply($methodName, ...$args);
+                    $this->apply($methodName, ...$args);
+                    return $this->data->isCurrentOK();
                 }
                 if (method_exists($this, $methodName)) {
-                    $endApply($this->$methodName(...$args));
-                    return $this;
+                    return $this->$methodName(...$args);
                 }
                 if (method_exists($this, '_' . $methodName)) {
-                    $endApply($this->{'_' . $methodName}(...$args));
-                    return $this;
+                    return $this->{'_' . $methodName}(...$args);
                 }
             }
-            $result = $reflection->getNumberOfParameters() === 0
+            return $reflection->getNumberOfParameters() === 0
                 ? $validator->call($this)
                 : $validator->call($this, $value, ...$args);
-            $endApply($result);
-            return $this;
         }
 
         if (is_callable($validator)) {
-            $endApply($validator($value, ...$args));
-            return $this;
+            return $validator($value, ...$args);
         }
 
         if (is_string($validator) && class_exists($validator)) {
             $rule = new $validator(...$args);
-            $endApply($rule($value));
-            return $this;
+            return $rule($value);
         }
 
         throw new BadMethodCallException("Rule [{$validator}] is not defined.");
