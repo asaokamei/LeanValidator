@@ -73,15 +73,15 @@ class ValidatorRules
     {
         return [
             'email' => fn ($v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_EMAIL) !== false,
-            'float' => fn ($v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_FLOAT) !== false,
+            'float' => fn ($v): bool => is_numeric($v) && filter_var($v, FILTER_VALIDATE_FLOAT) !== false,
             'url' => fn ($v): bool => is_string($v) && filter_var($v, FILTER_VALIDATE_URL) !== false,
-            'alnum' => fn ($v): bool => is_string($v) && preg_match('/^[a-zA-Z0-9]+$/', $v) === 1,
+            'alnum' => fn ($v): bool => (is_string($v) || is_int($v)) && preg_match('/^[a-zA-Z0-9]+$/', (string)$v) === 1,
             'alpha' => fn ($v): bool => is_string($v) && preg_match('/^[a-zA-Z]+$/', $v) === 1,
-            'digit' => fn ($v): bool => is_string($v) && preg_match('/^[0-9]+$/', $v) === 1,
+            'digit' => fn ($v): bool => (is_string($v) || is_int($v)) && preg_match('/^[0-9]+$/', (string)$v) === 1,
             'numeric' => fn ($v): bool => is_numeric($v),
             'alphaDash' => fn ($v): bool => is_string($v) && preg_match('/^[a-zA-Z0-9_\-]+$/', $v) === 1,
-            'min' => fn ($v, int $min): bool => is_int($v) && $v >= $min,
-            'max' => fn ($v, int $max): bool => is_int($v) && $v <= $max,
+            'min' => fn ($v, $min): bool => is_numeric($v) && $v >= $min,
+            'max' => fn ($v, $max): bool => is_numeric($v) && $v <= $max,
         ];
     }
 
@@ -134,10 +134,10 @@ class ValidatorRules
         return is_int($this->data->getCurrentValue());
     }
 
-    protected function _between(int $min, int $max): bool
+    protected function _between(int|float $min, int|float $max): bool
     {
         $value = $this->data->getCurrentValue();
-        if (!is_int($value)) {
+        if (!is_numeric($value)) {
             return false;
         }
         if ($min > $max) {

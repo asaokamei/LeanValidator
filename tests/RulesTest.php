@@ -84,7 +84,7 @@ class RulesTest extends TestCase
         $this->assertTrue($v->isCurrentError());
 
         $v->field('intVal')->digit();
-        $this->assertTrue($v->isCurrentError());
+        $this->assertTrue($v->isCurrentOK());
     }
 
     public function testIn()
