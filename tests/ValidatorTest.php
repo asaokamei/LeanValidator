@@ -152,4 +152,30 @@ class ValidatorTest extends TestCase
         // Kid is 10, so age < 18 should fail
         $this->assertArrayHasKey('users.2.age', $errors);
     }
+
+    public function testMessageOnlyAppliesToNextRule()
+    {
+        $v = Validator::make(['field' => 123]);
+        $v->field('field', 'field-default')
+            ->message('custom-int')->int()   // Success
+            ->email();                       // Fail, should use 'field-default'
+        
+        $this->assertEquals('field-default', $v->getErrorsFlat()['field']);
+
+        $v = Validator::make(['field' => 'abc']);
+        $v->field('field', 'field-default')
+            ->message('custom-int')->int()   // Fail, should use 'custom-int'
+            ->email();
+        
+        $this->assertEquals('custom-int', $v->getErrorsFlat()['field']);
+    }
+
+    public function testMessageWithRequired()
+    {
+        $v = Validator::make(['field' => '']);
+        $v->field('field', 'field-default')
+            ->message('is-required')->required();
+        
+        $this->assertEquals('is-required', $v->getErrorsFlat()['field']);
+    }
 }

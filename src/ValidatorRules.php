@@ -52,6 +52,7 @@ class ValidatorRules
     use ArrayRules;
 
     private ValidatorData $data;
+    private ?string $temporaryMessage = null;
 
     /**
      * 追加・上書き用。組み込みは builtinRules() とマージされる（同名キーはこちらが優先）。
@@ -115,9 +116,13 @@ class ValidatorRules
         return $this->apply($name, ...$args);
     }
 
+    /**
+     * Set a custom error message for the next rule.
+     * This message will be cleared after the next rule (or required) is executed.
+     */
     public function message(string $msg): static
     {
-        $this->data->setErrorMessage($msg);
+        $this->temporaryMessage = $msg;
         return $this;
     }
 

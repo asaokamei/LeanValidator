@@ -26,10 +26,18 @@ trait ApplyRules
             return $this;
         }
 
+        $temporaryMessage = $this->temporaryMessage;
+        $this->temporaryMessage = null;
+
         $value = $this->data->getCurrentValue();
-        $endApply = function ($result) use ($value) {
+        $endApply = function ($result) use ($value, $temporaryMessage) {
             if ($result === false || $this->data->isCurrentError()) {
+                $originalMessage = $this->data->getErrorMessage();
+                if ($temporaryMessage) {
+                    $this->data->setErrorMessage($temporaryMessage);
+                }
                 $this->data->setError();
+                $this->data->setErrorMessage($originalMessage);
             } else {
                 if (!$this->data->isSkipped()) {
                     $this->data->setValidatedCurrentKey($value);

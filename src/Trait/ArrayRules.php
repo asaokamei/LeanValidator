@@ -50,12 +50,13 @@ trait ArrayRules
         if ($this->data->isCurrentError() || $this->data->isSkipped()) {
             return $this;
         }
+        $msg = $msg ?? $this->temporaryMessage ?? $this->data->getErrorMessage() ?? $this->data->defaultMessage;
+        $this->temporaryMessage = null;
         $value = $this->data->getCurrentValue();
         if ($value === null) {
             $value = [];
         }
         if (!is_array($value)) {
-            $msg = $msg ?? $this->data->getErrorMessage() ?? $this->data->defaultMessage;
             $this->data->setError($msg);
             return $this;
         }
