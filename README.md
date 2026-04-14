@@ -231,7 +231,8 @@ $v->field('type')->requiredIf('category', 'special', 'Required', 'default-type')
 - `alpha()`: Validates alphabetic characters.
 - `digit()`: Validates that the value is a string containing only ASCII digits (`0`–`9`), one or more characters.
 - `numeric()`: Validates that the value is numeric in the PHP sense (`is_numeric()`), including int/float and numeric strings (e.g. `"123"`, `"1.5"`).
-- `in(array $choices)`: Validates if the value is within the given choices.
+- `in(array $choices)`: Validates if the value is within the given choices. Supports `Enum::cases()`.
+- `enum(string $enumClass)`: Validates if the value matches the given BackedEnum (value) or UnitEnum (name).
 - `contains(string $needle)`: Validates if the value contains the needle.
 - `startsWith(string $prefix)`: Validates if the string value starts with the prefix.
 - `endsWith(string $suffix)`: Validates if the string value ends with the suffix.
@@ -243,6 +244,23 @@ $v->field('type')->requiredIf('category', 'special', 'Required', 'default-type')
 - `filterVar(int $filter)`: Uses PHP's `filter_var`.
 
 ## Advanced Validation
+
+### Validating Enums
+
+You can validate against PHP Enums using `enum()` or `in()`.
+
+```php
+// BackedEnum (string or int)
+$v->field('status')->enum(StatusEnum::class);
+
+// UnitEnum
+$v->field('type')->enum(TypeEnum::class);
+
+// Using in() with Enum::cases()
+$v->field('role')->in(RoleEnum::cases());
+```
+
+When using `enum()` with a `BackedEnum: int`, the validator automatically casts numeric strings to integers before validation.
 
 ### Validating Arrays of Scalars
 
