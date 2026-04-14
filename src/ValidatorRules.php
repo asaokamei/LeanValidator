@@ -172,7 +172,16 @@ class ValidatorRules
 
     protected function _in(array $choices): bool
     {
-        return in_array($this->data->getCurrentValue(), $choices, true);
+        $value = $this->data->getCurrentValue();
+        
+        // If choices are Enums (like MyEnum::cases()), extract values or names.
+        if (isset($choices[0]) && $choices[0] instanceof \UnitEnum) {
+            $choices = $choices[0] instanceof \BackedEnum
+                ? array_column($choices, 'value')
+                : array_column($choices, 'name');
+        }
+        
+        return in_array($value, $choices, true);
     }
 
     protected function _enum(string $enum): bool

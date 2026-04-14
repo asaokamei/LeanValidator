@@ -96,6 +96,20 @@ class RulesTest extends TestCase
         
         $v->field('invalid')->in(['a', 'b', 'c']);
         $this->assertTrue($v->isCurrentError());
+
+        // Enum Support
+        $v = Validator::make(['ok' => 'a', 'bad' => 'c', 'int' => 1, 'unit' => 'A']);
+        $v->field('ok')->in(TestEnum::cases());
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('bad')->in(TestEnum::cases());
+        $this->assertTrue($v->isCurrentError());
+
+        $v->field('int')->in(TestIntEnum::cases());
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('unit')->in(TestUnitEnum::cases());
+        $this->assertTrue($v->isCurrentOK());
     }
 
     public function testContains()
