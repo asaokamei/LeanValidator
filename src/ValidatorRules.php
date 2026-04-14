@@ -31,6 +31,7 @@ use Wscore\LeanValidator\Trait\RequiredRules;
  * @method $this digit()
  * @method $this numeric()
  * @method $this in(array $choices)
+ * @method $this enum(string $enum)
  * @method $this contains(string $needle)
  * @method $this startsWith(string $prefix)
  * @method $this endsWith(string $suffix)
@@ -172,6 +173,30 @@ class ValidatorRules
     protected function _in(array $choices): bool
     {
         return in_array($this->data->getCurrentValue(), $choices, true);
+    }
+
+    protected function _enum(string $enum): bool
+    {
+        $value = $this->data->getCurrentValue();
+        if ($value instanceof $enum) {
+            return true;
+        }
+        if (is_subclass_of($enum, \BackedEnum::class)) {
+            $is_int = is_int($enum::cases()[0]->value ?? null);
+            if ($is_int) {
+                if (!is_int($value) && !ctype_digit((string)$value)) {
+                    return false;
+                }
+                $value = (int)$value;
+            } else {
+                $value = (string)$value;
+            }
+            return $enum::tryFrom($value) !== null;
+        }
+        if (is_subclass_of($enum, \UnitEnum::class)) {
+            return in_array($value, array_column($enum::cases(), 'name'), true);
+        }
+        return false;
     }
 
     protected function _contains(string $needle): bool

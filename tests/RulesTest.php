@@ -288,4 +288,59 @@ class RulesTest extends TestCase
         $v->field('ok')->hasChar('/[a-z]/', 2);
         $this->assertTrue($v->isCurrentOK());
     }
+
+    public function testEnum()
+    {
+        $v = Validator::make(['ok' => 'a', 'bad' => 'c', 'int' => 1, 'intStr' => '2', 'notDigit' => '1a']);
+        
+        $v->field('ok')->enum(TestEnum::class);
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('bad')->enum(TestEnum::class);
+        $this->assertTrue($v->isCurrentError());
+
+        $v->field('int')->enum(TestIntEnum::class);
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('intStr')->enum(TestIntEnum::class);
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('notDigit')->enum(TestIntEnum::class);
+        $this->assertTrue($v->isCurrentError());
+
+        $v->field('ok')->enum(TestIntEnum::class);
+        $this->assertTrue($v->isCurrentError());
+    }
+
+    public function testUnitEnum()
+    {
+        $v = Validator::make(['ok' => 'A', 'bad' => 'C', 'obj' => TestUnitEnum::B]);
+
+        $v->field('ok')->enum(TestUnitEnum::class);
+        $this->assertTrue($v->isCurrentOK());
+
+        $v->field('bad')->enum(TestUnitEnum::class);
+        $this->assertTrue($v->isCurrentError());
+
+        $v->field('obj')->enum(TestUnitEnum::class);
+        $this->assertTrue($v->isCurrentOK());
+    }
+}
+
+enum TestEnum: string
+{
+    case A = 'a';
+    case B = 'b';
+}
+
+enum TestIntEnum: int
+{
+    case ONE = 1;
+    case TWO = 2;
+}
+
+enum TestUnitEnum
+{
+    case A;
+    case B;
 }
